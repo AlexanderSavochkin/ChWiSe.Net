@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app
+        version="2.5"
+        xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <servlet>
+        <servlet-name>SearchServlet</servlet-name>
+        <!-- <description>Text-structure mixed search servlet</description> -->
+        <servlet-class>net.chwise.websearch.SearchServlet</servlet-class>
+        <init-param>
+            <param-name>directorySourceClassName</param-name>
+            <param-value>net.chwise.index.FSDirectoryInitializer</param-value>
+        </init-param>
+        <init-param>
+            <param-name>directorySourceParams</param-name>
+            <param-value>/home/savochkin/ToX/ChWiSe/Data/index</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <servlet-name>Mol2SmilesServlet </servlet-name>
+        <!-- <description>Text-structure mixed search servlet</description> -->
+        <servlet-class>net.chwise.websearch.Mol2SmilesServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>SearchServlet</servlet-name>
+        <url-pattern>/search</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>Mol2SmilesServlet</servlet-name>
+        <url-pattern>/convertmol</url-pattern>
+    </servlet-mapping>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>admin</web-resource-name>
+            <url-pattern>/admin/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>admin</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+</web-app>

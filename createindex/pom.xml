@@ -1,0 +1,190 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>net.chwise.websearch</groupId>
+  <artifactId>createindex</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>createindex</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <parent>
+     <groupId>net.chwise</groupId>
+     <artifactId>websearch</artifactId>
+     <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <dependencies>
+    <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-analyzers-common</artifactId>
+        <version>4.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-queryparser</artifactId>
+        <version>4.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>4.3.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-highlighter</artifactId>
+        <version>4.3.0</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.openscience.cdk</groupId>
+        <artifactId>cdk-io</artifactId>
+<!--      <version>${cdk.version}</version> -->
+        <version>1.4.16</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openscience.cdk</groupId>
+        <artifactId>cdk-smiles</artifactId>
+<!--      <version>${cdk.version}</version> -->
+        <version>1.4.16</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openscience.cdk</groupId>
+        <artifactId>cdk-core</artifactId>
+<!--      <version>${cdk.version}</version> -->
+        <version>1.4.16</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openscience.cdk</groupId>
+        <artifactId>cdk-sdg</artifactId>
+<!--      <version>${cdk.version}</version> -->
+        <version>1.4.16</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.lucenechemistry</groupId>
+        <artifactId>lucenechemistry</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>chwise-common</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- Sweble Wikitext Components -->
+    <dependency>
+      <groupId>org.sweble.wikitext</groupId>
+      <artifactId>swc-engine</artifactId>
+      <version>2.0.0-alpha-3-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <repositories>
+     <repository> <!--This repository contains chemical development kit.-->
+        <id>ucc-repo</id>
+        <name>UCC Repository</name>
+        <url>http://ambit.uni-plovdiv.bg:8083/nexus/content/repositories/thirdparty</url>
+     </repository>
+
+     <repository>
+       <id>savochkin.github.mvn.repo</id>
+       <url>https://raw.github.com/AlexanderSavochkin/maven-repository/master</url>
+       <!-- use snapshot version -->
+       <snapshots>
+         <enabled>true</enabled>
+         <updatePolicy>always</updatePolicy>
+       </snapshots>
+     </repository>
+
+     <repository>
+       <releases>
+         <enabled>true</enabled>
+         <updatePolicy>daily</updatePolicy>
+         <checksumPolicy>warn</checksumPolicy>
+       </releases>
+       <snapshots>
+         <enabled>true</enabled>
+         <updatePolicy>daily</updatePolicy>
+         <checksumPolicy>warn</checksumPolicy>
+       </snapshots>
+       <id>osr-public-repositories</id>
+       <name>OSR Public Repositories</name>
+       <url>http://mojo.informatik.uni-erlangen.de/nexus/content/repositories/public</url>
+     </repository>
+
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <archive>
+            <manifest>
+               <mainClass>net.chwise.indexing.App</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.2.1</version>
+          <configuration>
+            <mainClass>net.chwise.indexing.App</mainClass>
+<!--            <outputFile>/home/savochkin/ToX/ChWiSe/output.log</outputFile> -->
+            <arguments>
+              <argument>/home/savochkin/ToX/ChWiSe/Data/result</argument>
+              <argument>/home/savochkin/ToX/ChWiSe/Data/index</argument>
+            </arguments>
+          </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>assemble-all</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

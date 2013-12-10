@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemicals componds search in wikipedia</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/navbar-static-top.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/ChemDoodleWeb.css" type="text/css">
+
+    <link href="jquery-ui-1.10.3.custom.min.css" rel="stylesheet">
+
+    <style type="text/css">
+       .wide-input { width:100%; }
+       .search-button { text-align:center; }
+    </style>
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="js/ChemDoodleWeb-libs.js"></script>
+    <script type="text/javascript" src="js/ChemDoodleWeb.js"></script>
+    <script type="text/javascript" src="js/ejs_production.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/ChemDoodleWeb-sketcher.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+
+    <script>
+        function doSearch( form ) {
+            //Clear previous results
+            $('#results-list').empty();
+            //Get form data
+            var textQuery = form.textquery.value;
+            var structQuery = form.smilesEdit.value;
+
+            //Request server
+            $.ajax({
+                type: "GET",
+                url: "search",
+                data: {q:textQuery, sq:structQuery},
+            })
+            .done( onSearchServerResults )
+            .fail( onSearchServerFailed );
+
+        }
+
+        function onSearchServerResults( serverResponse ) {
+            var result = serverResponse.result;
+            $('#total-results').html( 'Total results: ' + serverResponse.total );
+            if ( $.isArray( result ) ) {
+                var dataForTemplate = { responseRecords:result };
+                var resultsHTML = new EJS({url: 'templates/searchresult.ejs'}).render(dataForTemplate);
+                $('#results-list').html( resultsHTML );
+                //Draw molecular structure
+                for (var i = 0; i < result.length; ++i) {
+                  var canvasId = "moleculeCanvas" + i.toString();
+                  var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 100, 100 );
+                  viewerCanvas.specs.bonds_width_2D = .6;
+                  viewerCanvas.specs.bonds_saturationWidth_2D = .18;
+                  viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
+                  viewerCanvas.specs.atoms_font_size_2D = 10;
+                  viewerCanvas.specs.atoms_font_families_2D = ["Helvetica", "Arial", "sans-serif"];
+                  viewerCanvas.specs.atoms_displayTerminalCarbonLabels_2D = true;
+                  var molFile = result[i].mdlmol;
+                  var molecule = ChemDoodle.readMOL(molFile);
+                  molecule.scaleToAverageBondLength(14.4);
+                  viewerCanvas.loadMolecule(molecule);
+                }
+
+            } else {
+                alert("Error!");
+            }
+        }
+
+        function onSearchServerFailed ( xmlHttpRequest, statusText, errorThrown ) {
+          alert("Error in getting search result from server!");
+        }
+    </script>
+
+  </head>
+  <body>
+
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default navbar-static-top" role="navigation">
+
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">ChWiSe.Net</a>
+      </div>
+
+      <div class="collapse navbar-collapse navbar-ex1-collapse">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Search compound</a></li>
+          <li><a href="#">About</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Tools for search -->
+    <div class="container">
+      <form>
+        <div class="input-group,wide-input" >
+          <!-- <span class="input-group-addon"></span> -->
+          <input type="text" class="form-control" placeholder="Free text" name="textquery">
+        </div>
+        <div class="input-group">
+          <!-- <span class="input-group-addon">Structure</span> -->
+          <input id="smilesEdit" type="text" class="form-control" placeholder="Structure in SMILES" name="structurequery" >
+          <span class="input-group-btn">
+            <a data-toggle="modal" href="#structEditor" class="btn btn-default">Start sturcture editor</a>
+            <!-- <button type="button" class="btn btn-default" onClick="$('#structEditor').modal('show')" >Start sturcture editor</button>  -->
+          </span>
+        </div>
+        <p></p>
+        <div class="search-button">
+          <button type="button" class="btn btn-large btn-primary" onClick="doSearch(this.form)" >Search</button>
+        </div>
+
+      </form>
+    </div>
+
+    <div class="modal fade" id="structEditor" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Structure editor</h4>
+          </div>
+          <div class="modal-body">
+             <script>
+                // changes the default JMol color of hydrogen to black so it appears on white backgrounds
+                ChemDoodle.ELEMENT['H'].jmolColor = 'black';
+                // darkens the default JMol color of sulfur so it appears on white backgrounds
+                ChemDoodle.ELEMENT['S'].jmolColor = '#B9A130';
+                // initializes the SketcherCanvas
+                var sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {oneMolecule:false});
+                // sets terminal carbon labels to display
+                sketcher.specs.atoms_displayTerminalCarbonLabels_2D = true;
+                // sets atom labels to be colored by JMol colors, which are easy to recognize
+                sketcher.specs.atoms_useJMOLColors = true;
+                // enables overlap clear widths, so that some depth is introduced to overlapping bonds
+                sketcher.specs.bonds_clearOverlaps_2D = true;
+                // sets the shape color to improve contrast when drawing figures
+                sketcher.specs.shapes_color = 'c10000';
+                // because we do not load any content, we need to repaint the sketcher, otherwise we would just see an empty area with the toolbar
+                // however, you can instead use one of the Canvas.load... functions to pre-populate the canvas with content, then you don't need to call repaint
+                sketcher.repaint();
+
+               function onFinishEdit() {
+                 var mol = sketcher.getMolecule();
+                 var molFile = ChemDoodle.writeMOL(mol);
+                 //Request server to convert MOL->SMILES
+                 $.ajax({
+                   type: "POST",
+                   url: "convertmol",
+                   data: {mol:molFile},
+                 })
+                 .done( onMolToSmilesConverted )
+                 .fail( onChemFormatConversionFailed );
+               }
+
+               function onMolToSmilesConverted( serverResponse ) {
+                 $('#smilesEdit').val( serverResponse.smiles );
+                 $('#structEditor').modal('hide');
+               }
+
+               function onChemFormatConversionFailed ( xmlHttpRequest, statusText, errorThrown ) {
+                 alert("Error in getting MOL->SMILES conversion result from server!");
+               }
+
+             </script>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="onFinishEdit()" >Save changes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+    <!-- Results -->
+<!--    <div class="container" id="search-results-div" style="display:none"  > -->
+      <div class="container" id="search-results-div" >
+      <h2>Search results</h2>
+
+      <ol id="results-list">
+        <li>
+          <h4>Benzo(a)pyrene</h4>
+          <div class="row">
+            <div  class="col-md-8" >
+Benzo[a]pyrene is a polycyclic aromatic hydrocarbon found in coal tar with the formula C20H12. Its metabolites are mutagenic and highly carcinogenic, and it is listed as a Group 1 carcinogen by the IARC. The compound is one of the benzopyrenes, formed by a benzene ring fused to pyrene, and is the result of incomplete combustion at temperatures between 300 °C (572 °F) and 600 °C (1,112 °F).
+            </div>
+            <div class = "col-md-4">
+              <script>
+{
+        //initialize component and set visual specifications
+        var viewerCanvas = new ChemDoodle.ViewerCanvas('viewerCanvas5', 100, 100);
+        //the width of the bonds should be .6 pixels
+        viewerCanvas.specs.bonds_width_2D = .6;
+        //the spacing between higher order bond lines should be 18% of the length of the bond
+        viewerCanvas.specs.bonds_saturationWidth_2D = .18;
+        //the hashed wedge spacing should be 2.5 pixels
+        viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
+        //the atom label font size should be 10
+        viewerCanvas.specs.atoms_font_size_2D = 10;
+        //we define a cascade of acceptable font families
+        //if Helvetica is not found, Arial will be used
+        viewerCanvas.specs.atoms_font_families_2D = ["Helvetica", "Arial", "sans-serif"];
+        //display carbons labels if they are terminal
+        viewerCanvas.specs.atoms_displayTerminalCarbonLabels_2D = true;
+
+        //load data and read into a Molecule
+        var caffeineMolFile = 'Molecule Name\n  CHEMDOOD08070920033D 0   0.00000     0.00000     0\n[Insert Comment Here]\n 14 15  0  0  0  0  0  0  0  0  1 V2000\n   -0.3318    2.0000    0.0000   O 0  0  0  1  0  0  0  0  0  0  0  0\n   -0.3318    1.0000    0.0000   C 0  0  0  1  0  0  0  0  0  0  0  0\n   -1.1980    0.5000    0.0000   N 0  0  0  1  0  0  0  0  0  0  0  0\n    0.5342    0.5000    0.0000   C 0  0  0  1  0  0  0  0  0  0  0  0\n   -1.1980   -0.5000    0.0000   C 0  0  0  1  0  0  0  0  0  0  0  0\n   -2.0640    1.0000    0.0000   C 0  0  0  4  0  0  0  0  0  0  0  0\n    1.4804    0.8047    0.0000   N 0  0  0  1  0  0  0  0  0  0  0  0\n    0.5342   -0.5000    0.0000   C 0  0  0  1  0  0  0  0  0  0  0  0\n   -2.0640   -1.0000    0.0000   O 0  0  0  1  0  0  0  0  0  0  0  0\n   -0.3318   -1.0000    0.0000   N 0  0  0  1  0  0  0  0  0  0  0  0\n    2.0640   -0.0000    0.0000   C 0  0  0  2  0  0  0  0  0  0  0  0\n    1.7910    1.7553    0.0000   C 0  0  0  4  0  0  0  0  0  0  0  0\n    1.4804   -0.8047    0.0000   N 0  0  0  1  0  0  0  0  0  0  0  0\n   -0.3318   -2.0000    0.0000   C 0  0  0  4  0  0  0  0  0  0  0  0\n  1  2  2  0  0  0  0\n  3  2  1  0  0  0  0\n  4  2  1  0  0  0  0\n  3  5  1  0  0  0  0\n  3  6  1  0  0  0  0\n  7  4  1  0  0  0  0\n  4  8  2  0  0  0  0\n  9  5  2  0  0  0  0\n 10  5  1  0  0  0  0\n 10  8  1  0  0  0  0\n  7 11  1  0  0  0  0\n  7 12  1  0  0  0  0\n 13  8  1  0  0  0  0\n 13 11  2  0  0  0  0\n 10 14  1  0  0  0  0\nM  END\n> <DATE>\n07-08-2009\n';
+        var caffeine = ChemDoodle.readMOL(caffeineMolFile);
+        //the bond lengths should be 14.4 pixels in ACS Document 1996
+        caffeine.scaleToAverageBondLength(14.4);
+
+        viewerCanvas.loadMolecule(caffeine);
+}
+              </script>
+            </div>
+          </div>
+
+        </li>
+        <li>
+          <h4>Tryptophan</h4>
+          <div class="row">
+            <div class="col-md-8">
+Tryptophan (IUPAC-IUBMB abbreviation: Trp or W; IUPAC abbreviation: L-Trp or D-Trp; sold for medical use as Tryptan)[2] is one of the 22 standard amino acids and an essential amino acid in the human diet. It is encoded in the standard genetic code as the codon UGG. Only the L-stereoisomer of tryptophan is used in structural or enzyme proteins, but the D-stereoisomer is occasionally found in naturally produced peptides (for example, the marine venom peptide contryphan).[3] The distinguishing structural characteristic of tryptophan is that it contains an indole functional group. It is an essential amino acid, as demonstrated by its growth effects on rats.
+            </div>
+            <div class="col-md-4">
+<script>
+{
+        //initialize component and set visual specifications
+//        var viewerCanvas2 = new ChemDoodle.ViewerCanvas('viewerCanvas3', 100, 100);
+        var viewerCanvas = new ChemDoodle.ViewerCanvas('viewerCanvas3', 200, 200);
+        //the width of the bonds should be .6 pixels
+        viewerCanvas.specs.bonds_width_2D = .6;
+        //the spacing between higher order bond lines should be 18% of the length of the bond
+        viewerCanvas.specs.bonds_saturationWidth_2D = .18;
+        //the hashed wedge spacing should be 2.5 pixels
+        viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
+        //the atom label font size should be 10
+        viewerCanvas.specs.atoms_font_size_2D = 10;
+        //we define a cascade of acceptable font families
+        //if Helvetica is not found, Arial will be used
+        viewerCanvas.specs.atoms_font_families_2D = ["Helvetica", "Arial", "sans-serif"];
+        //display carbons labels if they are terminal
+        viewerCanvas.specs.atoms_displayTerminalCarbonLabels_2D = true;
+        
+        //load data and read into a Molecule
+        var caffeineMolFile = 'Amfetamine\n CHEMDOOD08070920033D 0   0.00000     0.00000     0\n\n 23 23  0     1  0  0  0  0  0999 V2000\n    2.1243   -0.3854    0.7127 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.0318    1.8011 C   0  0  2  0  0  0  0  0  0  0  0  0\n    1.3007    1.5625    1.9615 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.3898    2.0975    3.0306 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.6491   -0.7122    3.0708 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.9094    2.4654    2.7040 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8576    2.2186    4.3330 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.7547    2.9624    3.6961 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0123    2.7155    5.3251 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2938    3.0875    5.0066 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.2115   -0.2650    1.5417 H   0  0  0  0  0  0  0  0  0  0  0  0\n    2.3319    1.8762    2.1771 H   0  0  0  0  0  0  0  0  0  0  0  0\n    1.0490    2.0457    1.0071 H   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9267   -0.5594    3.8783 H   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6364   -0.3928    3.4227 H   0  0  0  0  0  0  0  0  0  0  0  0\n    1.6918   -1.7935    2.8939 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2792    2.3700    1.6869 H   0  0  0  0  0  0  0  0  0  0  0  0\n    1.8741    1.9371    4.5934 H   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0359   -1.3897    0.5625 H   0  0  0  0  0  0  0  0  0  0  0  0\n    1.8334    0.0609   -0.1563 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.7719    3.2515    3.4483 H   0  0  0  0  0  0  0  0  0  0  0  0\n    0.3714    2.8139    6.3454 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.9518    3.4746    5.7791 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0  0  0  0\n  1 19  1  0  0  0  0\n  1 20  1  0  0  0  0\n  2  3  1  0  0  0  0\n 2  5  1  0  0  0  0\n  2 11  1  0  0  0  0\n  3  4  1  0  0  0  0\n  3 12  1  0  0  0  0\n  3 13  1  0  0  0  0\n  4  6  2  0  0  0  0\n  4  7  1  0  0  0  0\n  5 14  1  0  0  0  0\n  5 15  1  0  0  0  0\n  5 16  1  0  0  0  0\n  6  8  1  0  0  0  0\n  6 17  1  0  0  0  0\n  7  9  2  0  0  0  0\n  7 18  1  0  0  0  0\n  8 10  2  0  0  0  0\n  8 21  1  0  0  0  0\n  9 10  1  0  0  0  0\n  9 22  1  0  0  0  0\n 10 23  1  0  0  0  0\nM  END\n';
+
+        var caffeine = ChemDoodle.readMOL(caffeineMolFile);
+        //the bond lengths should be 14.4 pixels in ACS Document 1996
+        caffeine.scaleToAverageBondLength(14.4);
+
+        viewerCanvas.loadMolecule(caffeine);
+}
+</script>
+            </div>
+          </div>
+        </li>
+
+        <li>
+          <h4>Carbon monoxide</h4>
+          <div class="row">
+            <div class="col-md-8">
+Tryptophan (IUPAC-IUBMB abbreviation: Trp or W; IUPAC abbreviation: L-Trp or D-Trp; sold for medical use as Tryptan)[2] is one of the 22 standard amino acids and an essential amino acid in the human diet. It is encoded in the standard genetic code as the codon UGG. Only the L-stereoisomer of tryptophan is used in structural or enzyme proteins, but the D-stereoisomer is occasionally found in naturally produced peptides (for example, the marine venom peptide contryphan).[3] The distinguishing structural characteristic of tryptophan is that it contains an indole functional group. It is an essential amino acid, as demonstrated by its growth effects on rats.
+            </div>
+            <div class="col-md-4">
+<script>
+{
+        //initialize component and set visual specifications
+//        var viewerCanvas2 = new ChemDoodle.ViewerCanvas('viewerCanvas3', 100, 100);
+        var viewerCanvas = new ChemDoodle.ViewerCanvas('viewerCanvas4', 200, 200);
+        //the width of the bonds should be .6 pixels
+        viewerCanvas.specs.bonds_width_2D = .6;
+        //the spacing between higher order bond lines should be 18% of the length of the bond
+        viewerCanvas.specs.bonds_saturationWidth_2D = .18;
+        //the hashed wedge spacing should be 2.5 pixels
+        viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
+        //the atom label font size should be 10
+        viewerCanvas.specs.atoms_font_size_2D = 10;
+        //we define a cascade of acceptable font families
+        //if Helvetica is not found, Arial will be used
+        viewerCanvas.specs.atoms_font_families_2D = ["Helvetica", "Arial", "sans-serif"];
+        //display carbons labels if they are terminal
+        viewerCanvas.specs.atoms_displayTerminalCarbonLabels_2D = true;
+        
+        //load data and read into a Molecule
+        var caffeineMolFile = '162268282\n  -OEChem-09201310432D\n\n  2  1  0     0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  2  0  0  0  0  0  0\n  1  2  2  0  0  0  0\nM  END\n';
+
+        var caffeine = ChemDoodle.readMOL(caffeineMolFile);
+        //the bond lengths should be 14.4 pixels in ACS Document 1996
+        caffeine.scaleToAverageBondLength(14.4);
+
+        viewerCanvas.loadMolecule(caffeine);
+}
+</script>
+            </div>
+          </div>
+        </li>
+
+
+      </ol>
+
+    </div>
+
+    <!--Paging -->
+    <div class="container">
+      <ul class="pagination">
+        <li class="disabled"><a href="#">&laquo;</a></li>
+        <li class="active"><a href="#">1</a></li>
+        <li><a href="#">2</a></li>
+        <li><a href="#">&raquo;</a></li>
+      </ul>
+    </div>
+
+    <div class="container" id="total-results" >
+    </div>
+
+  </body>
+</html>
