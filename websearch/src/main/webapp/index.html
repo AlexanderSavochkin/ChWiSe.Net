@@ -26,51 +26,138 @@
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb-sketcher.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap-paginator.min.js"></script>
 
     <script>
-        function doSearch( form ) {
+        var numResultsOnPage = 10;
+        var maximalNumberOfPages = 10;
+		
+        var cacheStruct = {
+			currentText:null,
+			currentStructure:null,
+			numViewableResults:null,
+			resultsCache: new Array(),
+		}
+		
+		function resetCache(queryStruct) {
+			cacheStruct.currentText = queryStruct.textQuery;
+			cacheStruct.currentStructure = queryStruct.structQuery;
+			cacheStruct.resultsCache.length = 0;
+		}
+		
+		function isCacheValid(queryStruct) {
+			return (cacheStruct.currentText == queryStruct.textQuery) && (cacheStruct.currentStructure == queryStruct.structQuery);
+		}
+		
+		function isPresentInCache(first, total) {
+			for (var i = 0; i < total; ++i) {
+				if (typeof cacheStruct.resultsCache[first + i] == 'undefined')
+					return false;
+			}
+			return true;
+		}
+		
+		function getCachedData(first, total) {
+			var result = [];
+			for (var i = 0; i < total; ++i)
+				result.push( cacheStruct.resultsCache[first + i] );
+			return result;
+		}
+		
+		function rememberDataInCache( searchResultList, first ) {
+			for (var i = 0; i < searchResultList.length; ++i) 		
+				cacheStruct.resultsCache[first + i] = searchResultList[i];
+		}
+		
+		function setResultData( searchResultList, firsrIndex ) {
+			var dataForTemplate = { responseRecords:searchResultList };
+            var resultsHTML = new EJS({url: 'templates/searchresult.ejs'}).render(dataForTemplate);
+            $('#results-list').html( resultsHTML );
+            $('#results-list').prop("start", firsrIndex + 1);
+            //Draw molecular structure
+            for (var i = 0; i < searchResultList.length; ++i) {
+                var canvasId = "moleculeCanvas" + i.toString();
+                var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 100, 100 );
+                viewerCanvas.specs.bonds_width_2D = .6;
+                viewerCanvas.specs.bonds_saturationWidth_2D = .18;
+                viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
+                viewerCanvas.specs.atoms_font_size_2D = 10;
+                viewerCanvas.specs.atoms_font_families_2D = ["Helvetica", "Arial", "sans-serif"];
+                viewerCanvas.specs.atoms_displayTerminalCarbonLabels_2D = true;
+                var molFile = searchResultList[i].mdlmol;
+                var molecule = ChemDoodle.readMOL(molFile);
+                molecule.scaleToAverageBondLength(14.4);
+                viewerCanvas.loadMolecule(molecule);
+            }		
+		}
+
+        function doSearch( queryStruct, first, total ) {
             //Clear previous results
             $('#results-list').empty();
-            //Get form data
-            var textQuery = form.textquery.value;
-            var structQuery = form.smilesEdit.value;
+		
+			if ( isCacheValid(queryStruct) && isPresentInCache(first, total) ) {
+				//Get all data from cache
+				setResultData( getCachedData(first, total), first );
+			}
+			else {
+				resetCache( queryStruct );
+			    
+				var textQuery = queryStruct.textQuery;
+				var structQuery = queryStruct.structQuery;
 
-            //Request server
-            $.ajax({
-                type: "GET",
-                url: "search",
-                data: {q:textQuery, sq:structQuery},
-            })
-            .done( onSearchServerResults )
-            .fail( onSearchServerFailed );
-
+				var params = {q:textQuery, sq:structQuery};
+				if (first != null)
+					params.from =  first;
+				if (total != null)
+					params.numShow = total;
+				//Request server
+				$.ajax({
+					type: "GET",
+					url: "search",
+					data: params,
+				})
+				.done( getSearchResultsHandler(first) )
+				.fail( onSearchServerFailed );
+			}
         }
+		
+        function onPageChangedHandle(e, oldPage, newPage) {
+			var rangeFrom = (newPage - 1) * numResultsOnPage;
+			var numResultsToShow = Math.min( numResultsOnPage, cacheStruct.numViewableResults - rangeFrom );			
+			doSearch( {textQuery: cacheStruct.currentText, structQuery: cacheStruct.currentStructure}, rangeFrom, numResultsToShow );
+        }		
 
-        function onSearchServerResults( serverResponse ) {
-            var result = serverResponse.result;
-            $('#total-results').html( 'Total results: ' + serverResponse.total );
-            if ( $.isArray( result ) ) {
-                var dataForTemplate = { responseRecords:result };
-                var resultsHTML = new EJS({url: 'templates/searchresult.ejs'}).render(dataForTemplate);
-                $('#results-list').html( resultsHTML );
-                //Draw molecular structure
-                for (var i = 0; i < result.length; ++i) {
-                  var canvasId = "moleculeCanvas" + i.toString();
-                  var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 100, 100 );
-                  viewerCanvas.specs.bonds_width_2D = .6;
-                  viewerCanvas.specs.bonds_saturationWidth_2D = .18;
-                  viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
-                  viewerCanvas.specs.atoms_font_size_2D = 10;
-                  viewerCanvas.specs.atoms_font_families_2D = ["Helvetica", "Arial", "sans-serif"];
-                  viewerCanvas.specs.atoms_displayTerminalCarbonLabels_2D = true;
-                  var molFile = result[i].mdlmol;
-                  var molecule = ChemDoodle.readMOL(molFile);
-                  molecule.scaleToAverageBondLength(14.4);
-                  viewerCanvas.loadMolecule(molecule);
+        function getSearchResultsHandler(from) {
+            return function( serverResponse ) {
+                var result = serverResponse.result;
+				var totalResults = serverResponse.total;
+                $('#total-results').html( 'Total results: ' + totalResults );
+				cacheStruct.numViewableResults = Math.min( numResultsOnPage * maximalNumberOfPages, totalResults );
+                if ( $.isArray( result ) ) {
+					rememberDataInCache( result, from )
+					setResultData( result, from )					
+
+                    //Calculate number of pages and adjust paginator
+                    if ( totalResults > numResultsOnPage ) {
+                        var numPages = totalResults / numResultsOnPage + (totalResults % numResultsOnPage ? 1 : 0);
+						var currentPage = from / numResultsOnPage;
+                        var options = {
+						    bootstrapMajorVersion: 3,							
+                            numberOfPages: 5,
+                            currentPage: currentPage + 1,
+                            totalPages: numPages,
+                            onPageChanged: onPageChangedHandle
+                        };
+                        //$('#paginator').show();
+                        $('#paginator').bootstrapPaginator(options);
+                    }
+                    else
+                        //$("paginator").hide();
+						;
+
+                } else {
+                    alert("Error!");
                 }
-
-            } else {
-                alert("Error!");
             }
         }
 
@@ -114,7 +201,7 @@
         </div>
         <p></p>
         <div class="search-button">
-          <button type="button" class="btn btn-large btn-primary" onClick="doSearch(this.form)" >Search</button>
+          <button type="button" class="btn btn-large btn-primary" onClick="doSearch({textQuery:this.form.textquery.value, structQuery:this.form.smilesEdit.value}, 0, numResultsOnPage)" >Search</button>
         </div>
 
       </form>
@@ -310,13 +397,19 @@ Tryptophan (IUPAC-IUBMB abbreviation: Trp or W; IUPAC abbreviation: L-Trp or D-T
 
     <!--Paging -->
     <div class="container">
+	    <ul id="paginator">
+		</ul>
+	</div>
+<!--	
+    <div id="paginator" class="container">
       <ul class="pagination">
         <li class="disabled"><a href="#">&laquo;</a></li>
         <li class="active"><a href="#">1</a></li>
         <li><a href="#">2</a></li>
         <li><a href="#">&raquo;</a></li>
       </ul>
-    </div>
+    </div>	  
+-->    
 
     <div class="container" id="total-results" >
     </div>

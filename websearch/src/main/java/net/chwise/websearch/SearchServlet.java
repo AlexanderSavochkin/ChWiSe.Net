@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.lang.Math;
 
 import static net.chwise.common.document.DocDefinitions.*;
 
@@ -100,9 +101,12 @@ public class SearchServlet extends HttpServlet {
             from = Integer.parseInt( strFrom );
 
         if ( strNumShow != null )
-            numShow = java.lang.Math.min( Integer.parseInt( strNumShow ), 20 );
+            numShow = Math.min( Integer.parseInt( strNumShow ), 20 );
 
         int to = from + numShow;
+
+        Integer[] fromTo = {new Integer(from), new Integer(to)};
+        LOGGER.log(Level.INFO, "Requested results range: from {0} to {1}", fromTo);
 
         JSONObject jsonResponse = new JSONObject();
         JSONArray jsonResult = new JSONArray();
@@ -132,6 +136,8 @@ public class SearchServlet extends HttpServlet {
 
             //Wrap results into json object
             HighlightedFragmentsRetriever highlighter = new HighlightedFragmentsRetriever();
+
+            to = Math.min(to, hits.length);
 
             for (int i = from; i < to; ++i) {
                 ScoreDoc hit = hits[i];

@@ -15,7 +15,7 @@
         </init-param>
         <init-param>
             <param-name>directorySourceParams</param-name>
-            <param-value>/home/savochkin/ToX/ChWiSe/Data/index</param-value>
+            <param-value>WEB-INF/index</param-value>
         </init-param>
     </servlet>
 

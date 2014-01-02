@@ -4,6 +4,13 @@
     <version>${appengine.app.version}</version>
     <threadsafe>true</threadsafe>
 
+    <static-files>
+        <include path="/favicon.ico" expiration="1d" />
+        <include path="/js/*.js" />
+        <include path="/templates/*.ejs" />
+        <include path="/css/*.css" />      
+    </static-files>
+
     <system-properties>
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
     </system-properties>
