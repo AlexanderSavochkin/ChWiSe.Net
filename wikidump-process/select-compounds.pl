@@ -23,7 +23,7 @@ else {
 for (my $i = 0; $i <= 9; ++$i) {
     my $path = $optputpath.'/'.$i;
     next if (-d $path);
-    die 'Can\'t create path $optputpath.'/'.$i. There is file with such name' if (-e $path.'/'.$i);
+    die 'Can\'t create path '.$optputpath.'/'.$i.' There is file with such name' if (-e $path.'/'.$i);
     mkdir $path;
 }
 
@@ -37,6 +37,7 @@ while(defined($page = $pages->next)) {
     #main namespace only
     next unless $page->namespace eq '';
     ++$total_count;
+    #Select articles containing chembox or drugbox with SMILES field inside
     if (${$page->text}  =~ /\{\{(chembox|drugbox).*\|\s*SMILES\s*=\s*([^\n\}\|]+)/is) {
         my $smiles = $2;
         next if $smiles =~ /^\s*$/;

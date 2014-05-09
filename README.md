@@ -9,5 +9,7 @@ It is based on my other project [Chemical Lucene](https://github.com/AlexanderSa
 References
 ----------
 
-[Post about this project](http://habrahabr.ru/post/185420/) at [habrahabr.ru](http://habrahabr.ru) (in Russian).
+[Post about this project](http://stuff-of-sanok.blogspot.ru/2014/01/chwisenet.html) in my personal blog (in Russian)
+
+[Vdeo presentation on YouTube](http://www.youtube.com/watch?v=V0ddipGhPc0)
 
