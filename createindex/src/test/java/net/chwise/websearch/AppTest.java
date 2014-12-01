@@ -5,7 +5,13 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Unit test for simple App.
+ * TODO:
+ *
+ *   1. Test single document text conversion
+ *
+ *   2. Test chembox data extraction
+ *
+ *   3. ... ?
  */
 public class AppTest 
     extends TestCase

@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2013 Alexander Savochkin
+ Copyright (c) 2013-2014 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -40,7 +40,7 @@ public class ToMOLConverterTest {
                 "M  CHG  1   1  -1\n" +
                 "M  CHG  1   2   1\n" +
                 "M  END\n";
-        String mol2 = mol.replaceAll("CDK\\s*\\d{10}","CDK     0000000000");
+        String mol2 = mol.replaceAll("CDK\\s*\\d{10}", "CDK     0000000000");
 //        Assert.assertEquals(correctMol, mol2);
     }
 
@@ -57,13 +57,13 @@ public class ToMOLConverterTest {
                 "    0.0000    1.5000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" +
                 "  2  1  2  0  0  0  0 \n" +
                 "M  END\n";
-        String mol2 = mol.replaceAll("CDK\\s*\\d{10}","CDK     0000000000");
+        String mol2 = mol.replaceAll("CDK\\s*\\d{10}", "CDK     0000000000");
 //        Assert.assertEquals(correctMol, mol2);
     }
 
     @Test
     public void testSmilesToMolConversion3() {
-        String smiles = "[C-]#[O+]";
+        String smiles = "[C-]#[O+]";  //Carbon monooxide
         ToMOLConverter converter = new ToMOLConverter();
         String mol =  converter.MOLChargesKludge( converter.convert(smiles) );
         String correctMol = "\n" +
@@ -76,7 +76,27 @@ public class ToMOLConverterTest {
                 "M  CHG  1   1  -1\n" +
                 "M  CHG  1   2   1\n" +
                 "M  END";
-        String mol2 = mol.replaceAll("CDK\\s*\\d{10}","CDK     0000000000");
+        String mol2 = mol.replaceAll("CDK\\s*\\d{10}", "CDK     0000000000");
+//        Assert.assertEquals(correctMol, mol2);
+    }
+
+
+    @Test
+    public void testIonicBondsSmilesToMolConversion() {
+        String smiles = "[Na+].[Na+].[O-]S([O-])(=O)=O";  //Sodium sulfate
+        ToMOLConverter converter = new ToMOLConverter();
+//        String mol =  converter.MOLChargesKludge( converter.convert(smiles) );
+/*        String correctMol = "\n" +
+                "  CDK     0000000000\n" +
+                "\n" +
+                "  2  1  0  0  0  0  0  0  0  0999 V2000\n" +
+                "    0.0000    0.0000    0.0000 C   0  5  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    1.5000    0.0000 O   0  3  0  0  0  0  0  0  0  0  0  0\n" +
+                "  2  1  3  0  0  0  0 \n" +
+                "M  CHG  1   1  -1\n" +
+                "M  CHG  1   2   1\n" +
+                "M  END"; */
+//        String mol2 = mol.replaceAll("CDK\\s*\\d{10}", "CDK     0000000000");
 //        Assert.assertEquals(correctMol, mol2);
     }
 
