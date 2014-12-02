@@ -1,6 +1,6 @@
 <% for(var i = 0; i < responseRecords.length; ++i) { %>
   <li>
-    <h4><%= responseRecords[i].title %></h4>
+    <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecords[i].title %>"><%= responseRecords[i].title %></a></h4>
     <div class="row">
       <div  class="col-md-8" >
         <%= responseRecords[i].textFragment %>
