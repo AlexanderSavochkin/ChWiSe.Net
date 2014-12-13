@@ -19,13 +19,13 @@
        .wide-input { width:100%; }
        .search-button { text-align:center; }
     </style>
-    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb-libs.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb.js"></script>
     <script type="text/javascript" src="js/ejs_production.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb-sketcher.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-min.js"></script>
     <script type="text/javascript" src="js/bootstrap-paginator.min.js"></script>
     <script type="text/javascript" src="js/spin.min.js"></script>
    
@@ -94,6 +94,9 @@
         }
 
         function doSearch( queryStruct, first, total ) {
+            //Clear errors and warnings alerts
+            $('#search-problem-notification').empty();
+
             //Clear previous results
             $('#results-list').empty();
 
@@ -140,7 +143,7 @@
                     data: params,
                 })
                 .done( getSearchResultsHandler(first, spinner) )
-                .fail( onSearchServerFailed );
+                .fail( getSearchServerFailed(spinner) );
 
                 //Start wait indicator
                 var target = document.getElementById('results-list'); //TODO: Use jQuery-style
@@ -186,13 +189,29 @@
                         ;
 
                 } else {
-                    alert("Error!");
+                    //Show alert
+                    var failure = serverResponse.failure;
+                    var resultsHTML = new EJS({url: 'templates/searchfailed.ejs'}).render(failure);
+                    //$('#search-problem-notification').html( resultsHTML );
+                    $('#search-problem-notification').append( resultsHTML );
+
                 }
             }
         }
 
-        function onSearchServerFailed ( xmlHttpRequest, statusText, errorThrown ) {
-          alert("Error in getting search result from server!");
+        function getSearchServerFailed ( spinnerWaitIndicator ) {
+            return function(xmlHttpRequest, statusText, errorThrown) {
+                if (spinnerWaitIndicator != null) { //Stop wait indicator if provided
+                    spinnerWaitIndicator.stop();
+                }
+                //Show alert
+                var alertParam = {
+                    severity:"error",
+                    message:"Unknonw error during compound search. Failed to receive response from server.",
+                };
+                var resultsHTML = new EJS({url: 'templates/searchfailed.ejs'}).render(alertParam);
+                $('#search-problem-notification').html( resultsHTML );
+            }
         }
     </script>
 
@@ -323,6 +342,10 @@
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
+    </div>
+
+    <!-- Problems with search notifications -->
+    <div class="container" id="search-problem-notification" >
     </div>
 
     <!-- Results -->

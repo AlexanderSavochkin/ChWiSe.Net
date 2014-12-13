@@ -1,0 +1,16 @@
+<% if (severity == "info") { %>
+    <div class="alert alert-info alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      <strong>We couldnt understand your query</strong> <%=message%>
+    </div>
+<% } else if (severity == "warning") { %>
+    <div class="alert alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      <strong>Warning</strong> <%=message%>
+    </div>
+<% } else if (severity == "error") { %>
+    <div class="alert alert-error alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      <strong>Ups</strong> <%=message%>
+    </div>
+<% } %>

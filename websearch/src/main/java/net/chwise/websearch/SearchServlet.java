@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2013 Alexander Savochkin
+ Copyright (c) 2013-2014 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -22,6 +22,7 @@ package net.chwise.websearch;
 
 import net.chwise.documents.HighlightedFragmentsRetriever;
 import net.chwise.index.ConfigurableDirectorySource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -34,8 +35,13 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Version;
+import org.apache.lucene.queryparser.classic.ParseException;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.openscience.cdk.exception.InvalidSmilesException;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -170,7 +176,31 @@ public class SearchServlet extends HttpServlet {
             jsonResponse.put( "result", jsonResult );
             jsonResponse.put( "total", totalResults );
 
-        } catch (Exception e) {
+        }
+        catch (ParseException e) {
+            JSONObject jsonFailure = SearchFailureJSONResponse.create ("info", "We couldn't understand query :(", "We currently don't understand brackets,quotes e.t.c.");
+            try {
+                jsonResponse.put( "failure",  jsonFailure );
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+                throw new RuntimeException(e1);
+            }
+        }
+        catch (RuntimeException e) {
+            if (e.getCause() instanceof InvalidSmilesException) {
+                JSONObject jsonFailure = SearchFailureJSONResponse.create("info", "We couldn't understand query :(", "We couldn't understand structure formula. Use structure editor for generating correct SMILES structures");
+                try {
+                    jsonResponse.put( "failure",  jsonFailure );
+                } catch (JSONException e1) {
+                    e1.printStackTrace();
+                    throw new RuntimeException(e1);
+                }
+            } else {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+        catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException( "Exception in servlet SearchServlet", e );
         }
