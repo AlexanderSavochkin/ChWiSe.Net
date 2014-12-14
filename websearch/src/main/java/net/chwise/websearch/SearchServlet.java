@@ -178,7 +178,7 @@ public class SearchServlet extends HttpServlet {
 
         }
         catch (ParseException e) {
-            JSONObject jsonFailure = SearchFailureJSONResponse.create ("info", "We couldn't understand query :(", "We currently don't understand brackets,quotes e.t.c.");
+            JSONObject jsonFailure = SearchFailureJSONResponse.create ("info", "We couldn't understand query", "Use quotes for phrase search. Use AND,OR,NOT for boolean search");
             try {
                 jsonResponse.put( "failure",  jsonFailure );
             } catch (JSONException e1) {
@@ -188,7 +188,7 @@ public class SearchServlet extends HttpServlet {
         }
         catch (RuntimeException e) {
             if (e.getCause() instanceof InvalidSmilesException) {
-                JSONObject jsonFailure = SearchFailureJSONResponse.create("info", "We couldn't understand query :(", "We couldn't understand structure formula. Use structure editor for generating correct SMILES structures");
+                JSONObject jsonFailure = SearchFailureJSONResponse.create("info", "We couldn't understand query", "Your structure formula doesn't seem like correct SMILES. Use structure editor for generating correct SMILES structures");
                 try {
                     jsonResponse.put( "failure",  jsonFailure );
                 } catch (JSONException e1) {
