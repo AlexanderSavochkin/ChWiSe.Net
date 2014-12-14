@@ -48,6 +48,12 @@ public class HighlightedFragmentsRetriever {
                 highlighter.setMaxDocCharsToAnalyze(Integer.MAX_VALUE);
                         
                 String[] fragments = highlighter.getBestFragments(stream, fieldContents, fragmentNumber);
+
+                if (fragments.length == 0) {
+                    //Return starting piece of fieldContents fragment
+                    fragments = new String[1];
+                    fragments[0] = fieldContents.substr(0, fragmentSize);
+                }
                         
                 return fragments;
         }
