@@ -52,7 +52,7 @@ public class HighlightedFragmentsRetriever {
                 if (fragments.length == 0) {
                     //Return starting piece of fieldContents fragment
                     fragments = new String[1];
-                    fragments[0] = fieldContents.substr(0, fragmentSize);
+                    fragments[0] = fieldContents.substring(0, Math.min(fragmentSize, fieldContents.length() ));
                 }
                         
                 return fragments;
