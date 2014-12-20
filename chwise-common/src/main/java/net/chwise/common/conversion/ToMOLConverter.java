@@ -46,10 +46,12 @@ public class ToMOLConverter
 
         StringWriter stringWriter = new StringWriter();
         try {
-            StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+            /*StructureDiagramGenerator sdg = new StructureDiagramGenerator();
             sdg.setMolecule(molecule);
             sdg.generateCoordinates();
-            molecule = sdg.getMolecule();
+            molecule = sdg.getMolecule();*/
+
+            molecule = MultiFragmentStructureDiagramGenerator.getMoleculeWith2DCoords(molecule);
 
             MDLV2000Writer mdlWriter = new MDLV2000Writer( stringWriter );
 
@@ -66,6 +68,8 @@ public class ToMOLConverter
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return stringWriter.toString();
     }
