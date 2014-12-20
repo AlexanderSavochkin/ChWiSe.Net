@@ -1,7 +1,7 @@
 ChWiSe.Net
 ==========
 
-ChWiSe.Net is "Chemical Wikipedia Search". It is servlet-based web-application which provides mixed text/chemical-structures search in
+[ChWiSe.Net](http://www.chwise.net) is "Chemical Wikipedia Search". It is servlet-based web-application which provides mixed text/chemical-structures search in
 english wikipedia articles describing chemical compounds.
 
 It is based on my other project [Chemical Lucene](https://github.com/AlexanderSavochkin/MolecularLucene). This project contains web-interface and wikipedia dump proceesing and indexing stuff.
@@ -13,3 +13,4 @@ References
 
 [Vdeo presentation on YouTube](http://www.youtube.com/watch?v=V0ddipGhPc0)
 
+[Projects twitter](https://twitter.com/chwisenet)
