@@ -28,24 +28,33 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class App 
 {
     private static void printUsage() {
-        System.err.println("Usage: java -jar createindex.jar <Path to files> <Path to index>");
+        System.err.println("Usage: java -jar createindex.jar <Path to files> <Path to index> [Path to infobox statistics]");
+    }
+
+    static void writeInfoboxesStatToFile(String filename, Map<String, Integer> stat) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(filename))) ) {
+            for (Map.Entry<String, Integer> entry : stat.entrySet()) {
+                writer.format("%s %d\n", entry.getKey(), entry.getValue() );
+            }
+        }
     }
 
     public static void main( String[] args ) throws IOException {
-        if (args.length != 2) {
+        if (args.length < 2 || args.length > 3) {
             printUsage();
             return;
         }
+        boolean needInfoboxStatistics = args.length == 3;
         String startFrom = args[0];
         String indexPath = args[1];
 
@@ -53,9 +62,11 @@ public class App
         Analyzer analyzer = DocDefinitions.getAnalyzer();
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, analyzer);
         IndexWriter indexWriter = new IndexWriter( directory, config);
-        FileVisitor<Path> fileIndexer = new FileIndexer( indexWriter );
+        FileIndexer fileIndexer = new FileIndexer( indexWriter, needInfoboxStatistics );
         Files.walkFileTree(Paths.get(startFrom), fileIndexer);
         indexWriter.close();
+        if (needInfoboxStatistics)
+            writeInfoboxesStatToFile(args[2], fileIndexer.getInfoboxKeysStatistics() );
         System.err.println("Finished!");
     }
 }

@@ -22,6 +22,7 @@ package net.chwise.indexing;
 
 import net.chwise.common.conversion.ToMOLConverter;
 import net.chwise.common.document.DocDefinitions;
+import net.chwise.dataextraction.InfoBoxDataExtractor;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
@@ -43,6 +44,8 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class FileIndexer extends SimpleFileVisitor<Path> {
@@ -57,10 +60,20 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
     WtEngineImpl engine = new WtEngineImpl(config);
 
     //private static Logger logger = Logger.getLogger( FileIndexer.class.getName() );
+    Map<String, Integer> infoboxKeysCout = new HashMap<String, Integer>();
+
+    boolean calculateStatistics =  false;
+
 
     FileIndexer(IndexWriter indexWriter) {
         this.indexWriter = indexWriter;
     }
+
+    FileIndexer(IndexWriter indexWriter, boolean calculateStatistics) {
+        this.indexWriter = indexWriter;
+        this.calculateStatistics = calculateStatistics;
+    }
+
 
     @Override
     public FileVisitResult visitFile(
@@ -88,9 +101,6 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
 
         String pathStr = path.toString();
         try (BufferedReader br = new BufferedReader(new FileReader( pathStr )))  {
-//        File inFile = new File(pathStr);
-//        String wikitext = FileUtils.readFileToString(inFile);
-
             //First line is compound name
             String title = br.readLine();
 
@@ -117,17 +127,34 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
 
             //Check chembox in the begining
 
-            TextConverter p = new TextConverter(config, wrapCol);
-            String text = (String) p.go(cp.getPage());
+            TextConverter markupStripConverter = new TextConverter(config, wrapCol);
+            String text = (String) markupStripConverter.go(cp.getPage());
 
+            InfoBoxDataExtractor infoBoxDataExtractor = new InfoBoxDataExtractor();
+            Map<String, String> infoboxFields = (Map<String, String>) infoBoxDataExtractor.go(cp.getPage());
+
+            //Update statistics if required
+            if (calculateStatistics) {
+                for (String key : infoboxFields.keySet()) {
+                    int count = infoboxKeysCout.containsKey(key) ? infoboxKeysCout.get(key) : 0;
+                    infoboxKeysCout.put(key, count + 1);
+                }
+            }
+
+            //Create lucene document
             Document document = new Document();
             document.add( new TextField( DocDefinitions.TITLE_FIELD_NAME, title, Field.Store.YES ) );
             document.add( new TextField( DocDefinitions.TEXT_FIELD_NAME, text, Field.Store.YES ) );
             document.add( new TextField( DocDefinitions.STRUCTURE_SMILES_FIELD_NAME, smiles, Field.Store.YES ) );
             document.add( new TextField( DocDefinitions.URL_FIELD_NAME, "#", Field.Store.YES ) );
             document.add( new StoredField( DocDefinitions.STRUCTURE_MOL_FIELD_NAME, toMOLConverter.MOLChargesKludge(toMOLConverter.convert(smiles)) ) );
+
             return document;
         }
+    }
+
+    public Map<String, Integer> getInfoboxKeysStatistics() {
+        return infoboxKeysCout;
     }
 }
 

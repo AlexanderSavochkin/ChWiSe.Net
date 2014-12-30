@@ -167,14 +167,9 @@ public class InfoBoxDataExtractor extends
         }
     }
 
-    public void visit(WtTagExtension n)
+    public void visit(WtNode n)
     {
-    }
-
-    public void visit(WtSection s)
-    {
-//        iterate(s.getHeading());
-//        iterate(s.getBody());
+        // Fallback for all nodes that are not explicitly handled below
     }
 
 }

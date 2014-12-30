@@ -54,8 +54,22 @@ public class InfoBoxDataExtractorTest {
             "{{ester-stub}}";
 
     String[][] expectedInfoboxValues = {
-            {},
-            {}
+            {"verifiedrevid", "425210668"},
+            {"Name","Ethyl 2-methylpentanoate"},
+            {"Reference",""},
+            {"ImageFile","Manzanate.png"},
+            {"ImageSize", "200px"},
+            {"ImageName",""},
+            {"IUPACName","Ethyl 2-methylpentanoate"},
+            {"OtherNames","Ethyl α-methylvalerate; Melon valerate"},
+            {"CASNo_Ref","correct"}, //?????
+            {"CASNo", "39255-32-8"},
+            {"SMILES","CCCC(C)C(=O)OCC"},
+            {"Formula","C<sub>8</sub>H<sub>16</sub>O<sub>2</sub>"},
+            {"MolarMass", "144.21 g/mol"},
+            {"Density",""},
+            {"MeltingPt",""},
+            {"BoilingPt",""}
     };
 
     @Test
@@ -78,7 +92,12 @@ public class InfoBoxDataExtractorTest {
         InfoBoxDataExtractor p = new InfoBoxDataExtractor();
         Map<String, String> infoBoxFields = (Map<String, String>) p.go(cp.getPage());
 
-        System.out.print( infoBoxFields.toString() );
-
+        for (String[] expectedInfoboxKeyValue : expectedInfoboxValues) {
+            String key = expectedInfoboxKeyValue[0];
+            String val = expectedInfoboxKeyValue[1];
+            assertTrue( infoBoxFields.containsKey(key) );
+            String actualValue = infoBoxFields.get(key);
+            assertEquals(val, actualValue);
+        }
     }
 }
