@@ -23,6 +23,7 @@ package net.chwise.indexing;
 import net.chwise.common.conversion.ToMOLConverter;
 import net.chwise.common.document.DocDefinitions;
 import net.chwise.dataextraction.InfoBoxDataExtractor;
+import net.chwise.dataextraction.SimpleFieldToFieldProcessor;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
@@ -47,6 +48,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
+
+import net.chwise.dataextraction.InfoBoxDataExtractor;
 
 public class FileIndexer extends SimpleFileVisitor<Path> {
 
@@ -99,6 +102,8 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
 
     Document readFile( Path path ) throws IOException, LinkTargetException, EngineException {
 
+        SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
+
         String pathStr = path.toString();
         try (BufferedReader br = new BufferedReader(new FileReader( pathStr )))  {
             //First line is compound name
@@ -148,6 +153,8 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
             document.add( new TextField( DocDefinitions.STRUCTURE_SMILES_FIELD_NAME, smiles, Field.Store.YES ) );
             document.add( new TextField( DocDefinitions.URL_FIELD_NAME, "#", Field.Store.YES ) );
             document.add( new StoredField( DocDefinitions.STRUCTURE_MOL_FIELD_NAME, toMOLConverter.MOLChargesKludge(toMOLConverter.convert(smiles)) ) );
+
+            simpleFieldToFieldProcessor.process(infoboxFields, document);
 
             return document;
         }
