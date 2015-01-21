@@ -20,12 +20,12 @@
 
 package net.chwise.dataextraction;
 
-import java.util.HashMap;
-import java.util.Map;
 import net.chwise.common.document.DocDefinitions;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
+
+import java.util.Map;
 
 public class SimpleFieldToFieldProcessor implements InfoboxDataProcessor {
 
@@ -33,13 +33,17 @@ public class SimpleFieldToFieldProcessor implements InfoboxDataProcessor {
         {"Name", DocDefinitions.SYNONYM_FIELD_NAME},
         {"IUPACName", DocDefinitions.SYNONYM_FIELD_NAME},
         {"OtherNames", DocDefinitions.SYNONYM_FIELD_NAME},
-        {"CASNo", DocDefinitions.EXTERNAL_ID}
+        {"CASNo", DocDefinitions.EXTERNAL_ID},
+        {"CAS number", DocDefinitions.EXTERNAL_ID},
+        {"PubChem", DocDefinitions.EXTERNAL_ID},
+        {"ChemSpider", DocDefinitions.EXTERNAL_ID}
     };
 
     public void process( Map<String, String> infoboxContent, Document doc) {
         for (String[] fieldToField: arrInfoboxFieldToDocField) {
             String infoBoxValue = infoboxContent.get(fieldToField[0]);
-            doc.add( new TextField( fieldToField[1], infoBoxValue, Field.Store.YES ) );
+            if (infoBoxValue != null)
+                doc.add( new TextField( fieldToField[1], infoBoxValue, Field.Store.YES ) );
         }
     }
 }
