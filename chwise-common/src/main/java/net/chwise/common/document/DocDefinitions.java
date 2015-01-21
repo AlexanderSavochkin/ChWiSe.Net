@@ -21,6 +21,7 @@
 package net.chwise.common.document;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.util.Version;
@@ -46,7 +47,9 @@ public class DocDefinitions {
     public static Analyzer getAnalyzer() {
         Map<String,Analyzer> analyzerPerField = new HashMap<String,Analyzer>();
         Analyzer smilesAnalyzer = new SmilesAnalyzer();
+        Analyzer keywordAnalyzer = new KeywordAnalyzer();
         analyzerPerField.put(STRUCTURE_SMILES_FIELD_NAME, smilesAnalyzer );
+        analyzerPerField.put(EXTERNAL_ID, keywordAnalyzer );
         PerFieldAnalyzerWrapper analyzerWrapper =
                 new PerFieldAnalyzerWrapper(new StandardAnalyzer(Version.LUCENE_43), analyzerPerField);
         return analyzerWrapper;

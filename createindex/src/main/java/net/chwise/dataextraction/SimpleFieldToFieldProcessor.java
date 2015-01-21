@@ -34,9 +34,10 @@ public class SimpleFieldToFieldProcessor implements InfoboxDataProcessor {
         {"IUPACName", DocDefinitions.SYNONYM_FIELD_NAME},
         {"OtherNames", DocDefinitions.SYNONYM_FIELD_NAME},
         {"CASNo", DocDefinitions.EXTERNAL_ID},
-        {"CAS number", DocDefinitions.EXTERNAL_ID},
+        {"CAS", DocDefinitions.EXTERNAL_ID},
         {"PubChem", DocDefinitions.EXTERNAL_ID},
-        {"ChemSpider", DocDefinitions.EXTERNAL_ID}
+        {"ChemSpider", DocDefinitions.EXTERNAL_ID},
+        {"ChEBI", DocDefinitions.EXTERNAL_ID}
     };
 
     public void process( Map<String, String> infoboxContent, Document doc) {
