@@ -81,7 +81,7 @@ public class InfoBoxDataExtractor extends
             currentValueStringBuilder.append(text.getContent().trim());
             currentValueStringBuilder.append(' ');
         } else if (currentState == ProcessingState.InsideUnknownTemplateNodeList) {
-            String value = text.getContent().trim();
+            String value = text.getContent().trim().toLowerCase();
             if (INTERESTING_INFOBOXES.contains(value)) {
                 currentState = ProcessingState.InsideChemboxTemplate;
             }
