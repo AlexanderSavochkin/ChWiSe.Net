@@ -43,7 +43,7 @@ public class SimpleFieldToFieldProcessor implements InfoboxDataProcessor {
     public void process( Map<String, String> infoboxContent, Document doc) {
         for (String[] fieldToField: arrInfoboxFieldToDocField) {
             String infoBoxValue = infoboxContent.get(fieldToField[0]);
-            if (infoBoxValue != null)
+            if (infoBoxValue != null && !infoBoxValue.isEmpty())
                 doc.add( new TextField( fieldToField[1], infoBoxValue, Field.Store.YES ) );
         }
     }
