@@ -39,7 +39,11 @@ public class DocDefinitions {
     public static final String URL_FIELD_NAME = "url";
     public static final String STRUCTURE_MOL_FIELD_NAME = "mdlmol";
     public static final String SYNONYM_FIELD_NAME = "synonym";
-    public static final String EXTERNAL_ID = "externalid";
+    //public static final String EXTERNAL_ID = "externalid";
+    public static final String CAS_NO = "cas";
+    public static final String PUBCHEM_ID = "pubchem";
+    public static final String CHEMSPIDER = "chemspider";
+    public static final String CHEBI = "chebi";
 
     private static String[] textFields = null;
     private static Map<String, Float> fieldWeights = null;
@@ -48,8 +52,14 @@ public class DocDefinitions {
         Map<String,Analyzer> analyzerPerField = new HashMap<String,Analyzer>();
         Analyzer smilesAnalyzer = new SmilesAnalyzer();
         Analyzer keywordAnalyzer = new KeywordAnalyzer();
+
         analyzerPerField.put(STRUCTURE_SMILES_FIELD_NAME, smilesAnalyzer );
-        analyzerPerField.put(EXTERNAL_ID, keywordAnalyzer );
+
+        analyzerPerField.put(CAS_NO, keywordAnalyzer );
+        analyzerPerField.put(PUBCHEM_ID, keywordAnalyzer );
+        analyzerPerField.put(CHEMSPIDER, keywordAnalyzer );
+        analyzerPerField.put(CHEBI, keywordAnalyzer );
+
         PerFieldAnalyzerWrapper analyzerWrapper =
                 new PerFieldAnalyzerWrapper(new StandardAnalyzer(Version.LUCENE_43), analyzerPerField);
         return analyzerWrapper;
@@ -57,17 +67,23 @@ public class DocDefinitions {
 
     public static String[] getTextFields() {
         if (textFields == null)
-            textFields = new String[]{TITLE_FIELD_NAME, TEXT_FIELD_NAME, SYNONYM_FIELD_NAME, EXTERNAL_ID};
+            textFields = new String[]{TITLE_FIELD_NAME, TEXT_FIELD_NAME, SYNONYM_FIELD_NAME, CAS_NO,
+                PUBCHEM_ID, CHEMSPIDER, CHEBI};
         return textFields;
     }
 
     public static Map<String, Float> getFieldWeights() {
         if (fieldWeights == null) {
             fieldWeights = new TreeMap<String, Float>();
+
             fieldWeights.put(TITLE_FIELD_NAME, 10.0f);
             fieldWeights.put(TEXT_FIELD_NAME, 1.0f);
             fieldWeights.put(SYNONYM_FIELD_NAME, 5.0f);
-            fieldWeights.put(EXTERNAL_ID, 10.0f);
+
+            fieldWeights.put(CAS_NO, 10.0f);
+            fieldWeights.put(PUBCHEM_ID, 10.0f);
+            fieldWeights.put(CHEMSPIDER, 10.0f);
+            fieldWeights.put(CHEBI, 10.0f);
         }
         return fieldWeights;
     }

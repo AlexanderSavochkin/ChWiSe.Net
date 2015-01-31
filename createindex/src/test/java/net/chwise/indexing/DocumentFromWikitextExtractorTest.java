@@ -75,12 +75,12 @@ public class DocumentFromWikitextExtractorTest {
 
     @Test
     public void testNedazoinIndexAndSearchByCASNo() throws LinkTargetException, EngineException {
-        testCompoundIndexAndSearch("z","Neldazosin", "CC(CC(=O)N1CCN(CC1)C2=NC3=CC(=C(C=C3C(=N2)N)OC)OC)O", NELDAZOSIN_ARTICLE, "externalid:109713-79-3");
+        testCompoundIndexAndSearch("z","Neldazosin", "CC(CC(=O)N1CCN(CC1)C2=NC3=CC(=C(C=C3C(=N2)N)OC)OC)O", NELDAZOSIN_ARTICLE, "cas:109713-79-3");
     }
 
     @Test
     public void testMajdineIndexAndSearchByCASNo() throws LinkTargetException, EngineException {
-        testCompoundIndexAndSearch("z","Majdine", "C[C@H]1[C@@H]2CN3CC[C@]4([C@@H]3C[C@@H]2C(=CO1)C(=O)OC)C5=C(C(=C(C=C5)OC)OC)NC4=O", MAJDINE_ARTICLE, "externalid:21627963");
+        testCompoundIndexAndSearch("z","Majdine", "C[C@H]1[C@@H]2CN3CC[C@]4([C@@H]3C[C@@H]2C(=CO1)C(=O)OC)C5=C(C(=C(C=C5)OC)OC)NC4=O", MAJDINE_ARTICLE, "pubchem:21627963");
     }
 
 }

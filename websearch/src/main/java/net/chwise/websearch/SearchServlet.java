@@ -26,7 +26,9 @@ import net.chwise.index.ConfigurableDirectorySource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -157,6 +159,21 @@ public class SearchServlet extends HttpServlet {
                 String smiles = foundDoc.getField(STRUCTURE_SMILES_FIELD_NAME).stringValue();
                 String mdlmol = foundDoc.getField(STRUCTURE_MOL_FIELD_NAME).stringValue();
 
+                IndexableField f = foundDoc.getField(CAS_NO);
+                String casno = f == null ? null : f.stringValue();
+                f = foundDoc.getField(PUBCHEM_ID);
+                String pubChemId = f == null ? null : f.stringValue();
+                f = foundDoc.getField(CHEMSPIDER);
+                String chemSpiderId = f == null ? null : f.stringValue();
+                f = foundDoc.getField(CHEBI);
+                String chebi = f == null ? null : f.stringValue();
+
+                JSONArray jsonSynonymsArray = new JSONArray();
+                IndexableField[] synonymFields = foundDoc.getFields(SYNONYM_FIELD_NAME);
+                for (IndexableField field: synonymFields) {
+                    String synonym = field.stringValue();
+                    jsonSynonymsArray.put(synonym);
+                }
 
                 //Highlight and fragment text
                 String[] documentTextFragments = highlighter.getFragmentsWithHighlightedTerms(analyzer, query,
@@ -169,6 +186,19 @@ public class SearchServlet extends HttpServlet {
                 jsonDoc.put( "url", url );
                 jsonDoc.put( "smiles", smiles );
                 jsonDoc.put( "mdlmol", mdlmol );
+                jsonDoc.put( "synonyms", jsonSynonymsArray );
+
+                JSONObject externalIdsDictionary = new JSONObject();
+                if ( casno != null )
+                    externalIdsDictionary.put("cas", casno);
+                if ( pubChemId != null )
+                    externalIdsDictionary.put("pubchem", pubChemId);
+                if ( chemSpiderId != null )
+                    externalIdsDictionary.put("chemspider",chemSpiderId);
+                if ( chebi != null )
+                    externalIdsDictionary.put("chebi",chebi);
+
+                jsonDoc.put( "externalrefs", externalIdsDictionary );
 
                 jsonResult.put(jsonDoc);
             }
