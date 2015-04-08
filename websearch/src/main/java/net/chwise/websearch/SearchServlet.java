@@ -35,6 +35,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -151,55 +152,7 @@ public class SearchServlet extends HttpServlet {
                 ScoreDoc hit = hits[i];
                 Document foundDoc = searcher.doc(hit.doc);
 
-                JSONObject jsonDoc = new JSONObject();
-
-                String title = foundDoc.getField(TITLE_FIELD_NAME).stringValue();
-                String url = "#";
-                String textFragment = foundDoc.getField( TEXT_FIELD_NAME ).stringValue();
-                String smiles = foundDoc.getField(STRUCTURE_SMILES_FIELD_NAME).stringValue();
-                String mdlmol = foundDoc.getField(STRUCTURE_MOL_FIELD_NAME).stringValue();
-
-                IndexableField f = foundDoc.getField(CAS_NO);
-                String casno = f == null ? null : f.stringValue();
-                f = foundDoc.getField(PUBCHEM_ID);
-                String pubChemId = f == null ? null : f.stringValue();
-                f = foundDoc.getField(CHEMSPIDER);
-                String chemSpiderId = f == null ? null : f.stringValue();
-                f = foundDoc.getField(CHEBI);
-                String chebi = f == null ? null : f.stringValue();
-
-                JSONArray jsonSynonymsArray = new JSONArray();
-                IndexableField[] synonymFields = foundDoc.getFields(SYNONYM_FIELD_NAME);
-                for (IndexableField field: synonymFields) {
-                    String synonym = field.stringValue();
-                    jsonSynonymsArray.put(synonym);
-                }
-
-                //Highlight and fragment text
-                String[] documentTextFragments = highlighter.getFragmentsWithHighlightedTerms(analyzer, query,
-                        TEXT_FIELD_NAME, textFragment, 3, 200);
-
-                String textFragmentsJoined = StringUtils.join(documentTextFragments, " ... ");
-
-                jsonDoc.put( "title", title );
-                jsonDoc.put( "textFragment", textFragmentsJoined );
-                jsonDoc.put( "url", url );
-                jsonDoc.put( "smiles", smiles );
-                jsonDoc.put( "mdlmol", mdlmol );
-                jsonDoc.put( "synonyms", jsonSynonymsArray );
-
-                JSONObject externalIdsDictionary = new JSONObject();
-                if ( casno != null )
-                    externalIdsDictionary.put("cas", casno);
-                if ( pubChemId != null )
-                    externalIdsDictionary.put("pubchem", pubChemId);
-                if ( chemSpiderId != null )
-                    externalIdsDictionary.put("chemspider",chemSpiderId);
-                if ( chebi != null )
-                    externalIdsDictionary.put("chebi",chebi);
-
-                jsonDoc.put( "externalrefs", externalIdsDictionary );
-
+                JSONObject jsonDoc = extractJSON(query, analyzer, highlighter, foundDoc);
                 jsonResult.put(jsonDoc);
             }
 
@@ -240,6 +193,59 @@ public class SearchServlet extends HttpServlet {
 
         out.print( jsonResponse );
         out.flush();
+    }
+
+    private JSONObject extractJSON(Query query, Analyzer analyzer, HighlightedFragmentsRetriever highlighter, Document foundDoc) throws IOException, InvalidTokenOffsetsException, JSONException {
+        JSONObject jsonDoc = new JSONObject();
+
+        String title = foundDoc.getField(TITLE_FIELD_NAME).stringValue();
+        String url = "#";
+        String textFragment = foundDoc.getField( TEXT_FIELD_NAME ).stringValue();
+        String smiles = foundDoc.getField(STRUCTURE_SMILES_FIELD_NAME).stringValue();
+        String mdlmol = foundDoc.getField(STRUCTURE_MOL_FIELD_NAME).stringValue();
+
+        IndexableField f = foundDoc.getField(CAS_NO);
+        String casno = f == null ? null : f.stringValue();
+        f = foundDoc.getField(PUBCHEM_ID);
+        String pubChemId = f == null ? null : f.stringValue();
+        f = foundDoc.getField(CHEMSPIDER);
+        String chemSpiderId = f == null ? null : f.stringValue();
+        f = foundDoc.getField(CHEBI);
+        String chebi = f == null ? null : f.stringValue();
+
+        JSONArray jsonSynonymsArray = new JSONArray();
+        IndexableField[] synonymFields = foundDoc.getFields(SYNONYM_FIELD_NAME);
+        for (IndexableField field: synonymFields) {
+            String synonym = field.stringValue();
+            jsonSynonymsArray.put(synonym);
+        }
+
+        //Highlight and fragment text
+        String[] documentTextFragments = highlighter.getFragmentsWithHighlightedTerms(analyzer, query,
+                TEXT_FIELD_NAME, textFragment, 3, 200);
+
+        String textFragmentsJoined = StringUtils.join(documentTextFragments, " ... ");
+
+        jsonDoc.put( "title", title );
+        jsonDoc.put( "textFragment", textFragmentsJoined );
+        jsonDoc.put( "url", url );
+        jsonDoc.put( "smiles", smiles );
+        jsonDoc.put( "mdlmol", mdlmol );
+        jsonDoc.put( "synonyms", jsonSynonymsArray );
+
+        JSONObject externalIdsDictionary = new JSONObject();
+        if ( casno != null )
+            externalIdsDictionary.put("cas", casno);
+        if ( pubChemId != null )
+            externalIdsDictionary.put("pubchem", pubChemId);
+        if ( chemSpiderId != null )
+            externalIdsDictionary.put("chemspider",chemSpiderId);
+        if ( chebi != null )
+            externalIdsDictionary.put("chebi",chebi);
+
+        jsonDoc.put( "externalrefs", externalIdsDictionary );
+
+        return jsonDoc;
     }
 
     boolean isQuery( String query ) {

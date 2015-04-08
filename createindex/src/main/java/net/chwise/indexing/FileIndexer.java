@@ -20,38 +20,25 @@
 
 package net.chwise.indexing;
 
-import net.chwise.common.conversion.ToMOLConverter;
-import net.chwise.common.document.DocDefinitions;
-import net.chwise.dataextraction.InfoBoxDataExtractor;
 import net.chwise.dataextraction.SimpleFieldToFieldProcessor;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.sweble.wikitext.engine.EngineException;
-import org.sweble.wikitext.engine.PageId;
-import org.sweble.wikitext.engine.PageTitle;
-import org.sweble.wikitext.engine.WtEngineImpl;
-import org.sweble.wikitext.engine.config.WikiConfig;
-import org.sweble.wikitext.engine.nodes.EngProcessedPage;
-import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
 import java.util.Map;
 
 public class FileIndexer extends SimpleFileVisitor<Path> {
 
     IndexWriter indexWriter;
     DocumentFromWikitextExtractor documentFromWikitextExtractor;
+
+    PrintWriter allCompoundNamesWriter = null;
 
     //private static Logger logger = Logger.getLogger( FileIndexer.class.getName() );
 
@@ -60,11 +47,16 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
         documentFromWikitextExtractor = new DocumentFromWikitextExtractor();
     }
 
-    FileIndexer(IndexWriter indexWriter, boolean calculateStatistics) {
+    FileIndexer(IndexWriter indexWriter, boolean calculateStatistics, String compoundNamesFileName) throws FileNotFoundException {
         this.indexWriter = indexWriter;
         documentFromWikitextExtractor = new DocumentFromWikitextExtractor(calculateStatistics);
+        allCompoundNamesWriter = new PrintWriter(compoundNamesFileName);
     }
 
+    public void close() {
+        if (allCompoundNamesWriter != null)
+            allCompoundNamesWriter.close();
+    }
 
     @Override
     public FileVisitResult visitFile(
@@ -88,14 +80,16 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
         return FileVisitResult.CONTINUE;
     }
 
+
     Document readFile( Path path ) throws IOException, LinkTargetException, EngineException {
-
         SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
-
         String pathStr = path.toString();
         try (BufferedReader br = new BufferedReader(new FileReader( pathStr )))  {
             //First line is compound name
             String title = br.readLine();
+
+            if (allCompoundNamesWriter != null)
+                allCompoundNamesWriter.println(title);
 
             //Second line is smiles
             String smiles = br.readLine();

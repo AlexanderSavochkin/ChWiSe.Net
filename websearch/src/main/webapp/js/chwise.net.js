@@ -46,7 +46,8 @@ function setResultData( searchResultList, firsrIndex ) {
     //Draw molecular structure
     for (var i = 0; i < searchResultList.length; ++i) {
         var canvasId = "moleculeCanvas" + i.toString();
-        var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 100, 100 );
+        var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 200, 200 );
+//        var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, '100%', '100%' );
         viewerCanvas.specs.bonds_width_2D = .6;
         viewerCanvas.specs.bonds_saturationWidth_2D = .18;
         viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;

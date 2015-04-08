@@ -38,7 +38,7 @@ import java.util.Map;
 public class App 
 {
     private static void printUsage() {
-        System.err.println("Usage: java -jar createindex.jar <Path to files> <Path to index> [Path to infobox statistics]");
+        System.err.println("Usage: java -jar createindex.jar <Path to files> <Path to index> [--infoboxstatistics <Path to infobox statistics>] [--printnameslist <Path to compounds list names>]");
     }
 
     static void writeInfoboxesStatToFile(String filename, Map<String, Integer> stat) throws IOException {
@@ -50,22 +50,45 @@ public class App
     }
 
     public static void main( String[] args ) throws IOException {
-        if (args.length < 2 || args.length > 3) {
+        if (args.length < 2 || args.length > 6) {
             printUsage();
             return;
         }
-        boolean needInfoboxStatistics = args.length == 3;
+
         String startFrom = args[0];
         String indexPath = args[1];
+
+        String compoundsListFileName = null;
+        String infoboxStatisticsFileName = null;
+
+        for (int i = 2; i < args.length - 1;)
+        {
+            if ("--printnameslist".equals(args[i]))
+            {
+                compoundsListFileName = args[i + 1];
+                i += 2;
+                continue;
+            }
+
+            if ("--infoboxstatistics".equals(args[i]))
+            {
+                infoboxStatisticsFileName = args[i + 1];
+                i += 2;
+                continue;
+            }
+
+        }
+
+
 
         Directory directory = new SimpleFSDirectory( new File(indexPath) );
         Analyzer analyzer = DocDefinitions.getAnalyzer();
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, analyzer);
         IndexWriter indexWriter = new IndexWriter( directory, config);
-        FileIndexer fileIndexer = new FileIndexer( indexWriter, needInfoboxStatistics );
+        FileIndexer fileIndexer = new FileIndexer( indexWriter, infoboxStatisticsFileName != null, compoundsListFileName );
         Files.walkFileTree(Paths.get(startFrom), fileIndexer);
         indexWriter.close();
-        if (needInfoboxStatistics)
+        if (infoboxStatisticsFileName != null)
             writeInfoboxesStatToFile(args[2], fileIndexer.getInfoboxKeysStatistics() );
         System.err.println("Finished!");
     }

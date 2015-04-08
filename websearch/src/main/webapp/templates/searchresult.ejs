@@ -4,11 +4,12 @@
       <div class="panel-body">
         <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecords[i].title %>"><%= responseRecords[i].title %></a></h4>
 
-        <div class="row">
+        <div  class="col-md-8" >
+          <div class="row">
             <h5>Synonyms: <% for(var j = 0; j < responseRecords.length; ++j) { %> &nbsp; <%= responseRecords[i].synonyms[j] %> <% } %></h5>
-        </div>
+          </div>
 
-        <div class="row">
+          <div class="row">
             <h5>
             <% if ("cas" in responseRecords[i].externalrefs) { %>
                 CAS Number: <%= responseRecords[i].externalrefs["cas"] %>;
@@ -20,16 +21,17 @@
                    ChemSpider Id: <%= responseRecords[i].externalrefs["chemspider"] %>;
             <% } %>
             </h5>
+          </div>
+
+          <div class="row">
+               <%= responseRecords[i].textFragment %>
+          </div>
+        </div> <!-- <div  class="col-md-8" > -->
+
+        <div class = "col-md-4">
+           <canvas id="moleculeCanvas<%= i %>" ></canvas>
         </div>
 
-        <div class="row">
-          <div  class="col-md-8" >
-            <%= responseRecords[i].textFragment %>
-          </div>
-          <div class = "col-md-4">
-            <canvas id="moleculeCanvas<%= i %>" ></canvas>
-          </div>
-        </div>
       </div> <!-- <div class="panel panel-default"> -->
     </div> <!-- <div class="panel-body"> -->
   </li>
