@@ -19,7 +19,7 @@
     <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb-libs.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb.js"></script>
-    <script type="text/javascript" src="js/ejs_production.js"></script>
+    <script type="text/javascript" src="js/underscore-min.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/ChemDoodleWeb-sketcher.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
@@ -58,7 +58,7 @@
         </div>
         <p></p>
         <div class="search-button">
-          <button type="button" class="btn btn-large btn-primary" onClick="doSearch({textQuery:this.form.textquery.value, structQuery:this.form.smilesEdit.value}, 0, numResultsOnPage)" >Search</button>
+          <button type="button" class="btn btn-large btn-primary chwise-btn-search">Search</button>
         </div>
 
       </form>
@@ -76,7 +76,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" onclick="onFinishEdit()" >Save changes</button>
+            <button type="button" class="btn btn-primary chwise-btn-finishedit">Save changes</button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
