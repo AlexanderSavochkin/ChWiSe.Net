@@ -46,11 +46,9 @@ var ChWiSe = ( function() {
 
     function setResultData( searchResultList, firsrIndex ) {
         var dataForTemplate = { responseRecords:searchResultList };
-//        var resultsHTML = new EJS({url: 'templates/searchresult.ejs'}).render(dataForTemplate);
 
-
-        var compiledResultTemplate = _.template( $('')  );
-
+        var compiledResultTemplate = _.template( $('#chwise-result-template').html() );
+        var resultsHTML = compiledResultTemplate( dataForTemplate );
 
         $('#results-list').html( resultsHTML );
         $('#results-list').prop("start", firsrIndex + 1);
@@ -58,7 +56,7 @@ var ChWiSe = ( function() {
         for (var i = 0; i < searchResultList.length; ++i) {
             var canvasId = "moleculeCanvas" + i.toString();
             var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 200, 200 );
-//        var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, '100%', '100%' );
+
             viewerCanvas.specs.bonds_width_2D = .6;
             viewerCanvas.specs.bonds_saturationWidth_2D = .18;
             viewerCanvas.specs.bonds_hashSpacing_2D = 2.5;
@@ -169,11 +167,10 @@ var ChWiSe = ( function() {
             } else {
                 //Show alert
                 var failure = serverResponse.failure;
+                var compiledErrorTemplate = _.template( $('#chwise-error-template').html() );
+                var resultsHTML = compiledErrorTemplate( failure );
 
-                var resultsHTML = new EJS({url: 'templates/searchfailed.ejs'}).render(failure);
-                //$('#search-problem-notification').html( resultsHTML );
                 $('#search-problem-notification').append( resultsHTML );
-
             }
         }
     }
@@ -188,7 +185,10 @@ var ChWiSe = ( function() {
                 severity:"error",
                 message:"Unknonw error during compound search. Failed to receive response from server.",
             };
-            var resultsHTML = new EJS({url: 'templates/searchfailed.ejs'}).render(alertParam);
+
+            var compiledErrorTemplate = _.template( $('#chwise-error-template').html() );
+            var resultsHTML = compiledErrorTemplate( alertParam );
+           
             $('#search-problem-notification').html( resultsHTML );
          }
      }
