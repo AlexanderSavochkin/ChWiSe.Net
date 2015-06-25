@@ -26,6 +26,50 @@
     <script type="text/javascript" src="js/bootstrap-paginator.min.js"></script>
     <script type="text/javascript" src="js/spin.min.js"></script>   
     <script type="text/javascript" src="js/chwise.net.js"></script>
+    <script type="text/template" id="chwise-result-template">
+
+       <% for(var i = 0; i < responseRecords.length; ++i) { %>
+       <li>
+          <div class="panel panel-default">
+              <div class="panel-body">
+                 <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecords[i].title %>"><%= responseRecords[i].title %></a></h4>
+
+                 <div  class="col-md-8" >
+                    <div class="row">
+                       <h5>Synonyms: <% for(var j = 0; j < responseRecords.length; ++j) { %> &nbsp; <%= responseRecords[i].synonyms[j] %> <% } %></h5>
+                    </div>
+
+                    <div class="row">
+                       <h5>
+                       <% if ("cas" in responseRecords[i].externalrefs) { %>
+                            CAS Number: <%= responseRecords[i].externalrefs["cas"] %>;
+                       <% }
+                          if ("pubchem" in responseRecords[i].externalrefs) { %>
+                              PubChem Id: <%= responseRecords[i].externalrefs["pubchem"] %>;
+                       <% }
+                          if ("chemspider" in responseRecords[i].externalrefs) { %>
+                              ChemSpider Id: <%= responseRecords[i].externalrefs["chemspider"] %>;
+                       <% } %>
+                       </h5>
+                    </div>
+
+                    <div class="row">
+                         <%= responseRecords[i].textFragment %>
+                    </div>
+                 </div> <!-- <div  class="col-md-8" > -->
+
+                 <div class = "col-md-4">
+                     <canvas id="moleculeCanvas<%= i %>" ></canvas>
+                 </div>
+
+              </div> <!-- <div class="panel panel-default"> -->
+          </div> <!-- <div class="panel-body"> -->
+       </li>
+       <% } %>
+
+
+
+    </script>
   </head>
   <body>
 

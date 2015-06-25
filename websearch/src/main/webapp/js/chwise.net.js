@@ -46,7 +46,12 @@ var ChWiSe = ( function() {
 
     function setResultData( searchResultList, firsrIndex ) {
         var dataForTemplate = { responseRecords:searchResultList };
-        var resultsHTML = new EJS({url: 'templates/searchresult.ejs'}).render(dataForTemplate);
+//        var resultsHTML = new EJS({url: 'templates/searchresult.ejs'}).render(dataForTemplate);
+
+
+        var compiledResultTemplate = _.template( $('')  );
+
+
         $('#results-list').html( resultsHTML );
         $('#results-list').prop("start", firsrIndex + 1);
         //Draw molecular structure
