@@ -17,57 +17,101 @@
        .search-button { text-align:center; }
     </style>
     <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
-    <script type="text/javascript" src="js/ChemDoodleWeb-libs.js"></script>
-    <script type="text/javascript" src="js/ChemDoodleWeb.js"></script>
-    <script type="text/javascript" src="js/underscore-min.js"></script>
+    <script type="text/javascript" src="js/underscore.js"></script>
+    <script type="text/javascript" src="js/backbone.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/ChemDoodleWeb-libs.js"></script>
+    <script type="text/javascript" src="js/ChemDoodleWeb.js"></script>    
     <script type="text/javascript" src="js/ChemDoodleWeb-sketcher.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
     <script type="text/javascript" src="js/bootstrap-paginator.min.js"></script>
     <script type="text/javascript" src="js/spin.min.js"></script>   
     <script type="text/javascript" src="js/chwise.net.js"></script>
-    <script type="text/template" id="chwise-result-template">
 
-       <% for(var i = 0; i < responseRecords.length; ++i) { %>
+
+
+    <script type="text/template" id="compoundresult">
        <li>
           <div class="panel panel-default">
               <div class="panel-body">
-                 <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecords[i].title %>"><%= responseRecords[i].title %></a></h4>
+                 <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecord.title %>"><%= responseRecord.title %></a></h4>
 
                  <div  class="col-md-8" >
                     <div class="row">
-                       <h5>Synonyms: <% for(var j = 0; j < responseRecords.length; ++j) { %> &nbsp; <%= responseRecords[i].synonyms[j] %> <% } %></h5>
+                       <h5>Synonyms: <% for(var j = 0; j < responseRecord.synonyms.length; ++j) { %> &nbsp; <%= responseRecord.synonyms[j] %> <% } %></h5>
                     </div>
 
                     <div class="row">
                        <h5>
-                       <% if ("cas" in responseRecords[i].externalrefs) { %>
-                            CAS Number: <%= responseRecords[i].externalrefs["cas"] %>;
+                       <% if ("cas" in responseRecord.externalrefs) { %>
+                            CAS Number: <%= responseRecord.externalrefs["cas"] %>;
                        <% }
-                          if ("pubchem" in responseRecords[i].externalrefs) { %>
-                              PubChem Id: <%= responseRecords[i].externalrefs["pubchem"] %>;
+                          if ("pubchem" in responseRecord.externalrefs) { %>
+                              PubChem Id: <%= responseRecord.externalrefs["pubchem"] %>;
                        <% }
-                          if ("chemspider" in responseRecords[i].externalrefs) { %>
-                              ChemSpider Id: <%= responseRecords[i].externalrefs["chemspider"] %>;
+                          if ("chemspider" in responseRecord.externalrefs) { %>
+                              ChemSpider Id: <%= responseRecord.externalrefs["chemspider"] %>;
                        <% } %>
                        </h5>
                     </div>
 
                     <div class="row">
-                         <%= responseRecords[i].textFragment %>
+                         <%= responseRecord.textFragment %>
                     </div>
                  </div> <!-- <div  class="col-md-8" > -->
 
                  <div class = "col-md-4">
-                     <canvas id="moleculeCanvas<%= i %>" ></canvas>
+                     <canvas id="moleculeCanvas<%= responseRecord.id %>" ></canvas>
                  </div>
 
               </div> <!-- <div class="panel panel-default"> -->
           </div> <!-- <div class="panel-body"> -->
        </li>
-       <% } %>
 
     </script>
+
+
+    <script type="text/template" id="chwise-details-template">
+        <div class="panel panel-default">
+           <div class="panel-body">
+              <h3><%=detailsInfo.title %></h3>
+
+              <div  class="col-md-8" >
+                  <div class="row">
+                     <h5>Synonyms: <% for(var j = 0; j < detailsInfo.synonyms.length; ++j) { %> &nbsp; <%= detailsInfo.synonyms[j] %> <% } %></h5>
+                  </div>
+
+                    <div class="row">
+                       <h5>
+                       <% if ("cas" in detailsInfo.externalrefs) { %>
+                            CAS Number: <%= detailsInfo.externalrefs["cas"] %>;
+                       <% }
+                          if ("pubchem" in detailsInfo.externalrefs) { %>
+                              PubChem Id: <%= detailsInfo.externalrefs["pubchem"] %>;
+                       <% }
+                          if ("chemspider" in detailsInfo.externalrefs) { %>
+                              ChemSpider Id: <%= detailsInfo.externalrefs["chemspider"] %>;
+                       <% } %>
+                       </h5>
+                    </div>
+
+                    <div class="row">
+                         <%= detailsInfo.textFragment %>
+                    </div>
+                 </div> <!-- <div  class="col-md-8" > -->
+
+                 <div class = "col-md-4">
+                     <canvas id="detailsMoleculeCanvas" ></canvas>
+                 </div>
+
+           </div> <!-- <div class="panel panel-default"> -->
+        </div> <!-- <div class="panel-body"> -->
+    </script>
+
+
+
+
+
     <script type="text/template" id="chwise-error-template">
        <% if (severity == "info") { %>
           <div class="alert alert-info alert-dismissible" role="alert">
@@ -105,61 +149,63 @@
     </nav>
 
     <!-- Tools for search -->
-    <div class="container">
-      <form>
-        <div class="input-group,wide-input" >
-          <input type="text" class="form-control" placeholder="Free text" name="textquery">
-        </div>
-        <div class="input-group">
-          <input id="smilesEdit" type="text" class="form-control" placeholder="Structure in SMILES" name="structurequery" >
-          <span class="input-group-btn">
-            <a data-toggle="modal" href="#structEditor" class="btn btn-default">Start sturcture editor</a>
-          </span>
-        </div>
-        <p></p>
-        <div class="search-button">
-          <button type="button" class="btn btn-large btn-primary chwise-btn-search">Search</button>
-        </div>
-
-      </form>
-    </div>
-
-    <div class="modal fade" id="structEditor" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">Structure editor</h4>
+    <div id="topview">
+      <div class="container">
+        <form id="search-form">
+          <div class="input-group,wide-input" >
+            <input type="text" class="form-control" placeholder="Free text" name="textquery">
           </div>
-          <div class="modal-body" id="structEditingArea" >
-             <canvas id="sketcher"></canvas>
+          <div class="input-group">
+            <input id="smilesEdit" type="text" class="form-control" placeholder="Structure in SMILES" name="structurequery" >
+            <span class="input-group-btn">
+              <a data-toggle="modal" href="#structEditor" class="btn btn-default">Start sturcture editor</a>
+            </span>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary chwise-btn-finishedit">Save changes</button>
+          <p></p>
+          <div class="search-button">
+            <button type="button" id="search-button" class="btn btn-large btn-primary chwise-btn-search">Search</button>
           </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
-    </div>
 
-    <!-- Problems with search notifications -->
-    <div class="container" id="search-problem-notification" >
-    </div>
+        </form>
+      </div>
 
-    <!-- Results -->
-    <div class="container" id="search-results-div" >
-      <h2>Search results</h2>
-      <ol id="results-list">
-<!-- Search results inserted here -->
-      </ol>
-    </div>
+      <!-- Modal div for structures editor -->
+      <div class="modal fade" id="structEditor" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title">Structure editor</h4>
+            </div>
+            <div class="modal-body" id="structEditingArea" >
+               <canvas id="sketcher"></canvas>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary chwise-btn-finishedit">Save changes</button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div>
 
-    <!--Paging -->
-    <div class="container">
-      <ul id="paginator"></ul>
+      <!-- Problems with search notifications -->
+      <div class="container" id="search-problem-notification" >
+      </div>
+
+      <!-- Results -->
+      <div class="container" id="search-results-div" >
+        <h2>Search results</h2>
+        <ol id="results-list">
+  <!-- Search results inserted here -->
+        </ol>
+      </div>
     </div>
 
     <div class="container" id="total-results" >
+    </div>
+
+    <div class="container" id="compound-details">
+<!-- Compounds details inserted here -->
     </div>
 
   </body>
