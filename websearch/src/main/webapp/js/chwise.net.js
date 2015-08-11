@@ -32,7 +32,39 @@ ChWiSe.Views.SearchResultCompound = Backbone.View.extend({
 });
 
 ChWiSe.Models.SearchResults = Backbone.Collection.extend({
-  url: '/search'
+
+  urlRoot: 'search',
+
+  url: function() {
+    // send the url along with the serialized query params
+    var result = this.urlRoot; 
+    var firstParam = true;
+    if (this.query) {
+      firstParam = false;
+      result += ("?" + "q=" + this.query);      
+    }
+    if (this.structureQuery) {
+      result += firstParam ? "?" : "&";
+      result += "sq=" + this.structureQuery;
+    }
+    return result;
+  },
+
+  initialize: function(models, options) {
+    options || (options = {});
+    if (options.query) {
+        this.query = options.query;
+    };
+    if (options.structureQuery) {
+      this.structureQuery = options.structureQuery;
+    }
+  },
+
+  parse: function(response) {
+console.log("Parse:")
+console.log( response );
+    return response.result;
+  }
 });
 
 ChWiSe.Views.SearchResults = Backbone.View.extend({
@@ -68,16 +100,8 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
     this.sketcher.repaint();    
   },
 
-  fetch: function() { 
-    this.model.fetch({ add: true, remove: false, merge: false, data: {
-      q: this.model.textQuery,
-      sq: this.model.structQuery,
-      from: this.model.length, 
-      numShow: ChWiSe.Constants.numResultsToFetch } 
-    });
-  },
-
   render: function() {
+    this.resultlist.empty();
     for (var i = 0; i < this.model.length; ++i) {
       var itemModel = this.model.at(i);
       var itemView = new ChWiSe.Views.SearchResultCompound({model: itemModel});
@@ -103,7 +127,11 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
   },
 
   clickSearch: function() {
-    console.log('Clicksearch!');
+    var q = $("#textquery").val();
+    var sq = $("#smilesEdit").val();
+console.log('Clicksearch! q=' + q + ", sq = " + sq);
+console.log(this)
+    ChWiSe.router.navigate("search?q=" + q + "&sq=" + sq, true); 
   },
 
   renderNewEntries: function() {   
@@ -115,7 +143,7 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
         //var t = compoundView.render().el;
         var t = compoundView.render().$el.html();
         this.resultlist.append( t );
-        //Initialize ChemDoodle canvas
+/*        //Initialize ChemDoodle canvas
 
         var canvasId = "moleculeCanvas" + itemModel.id;
 
@@ -130,7 +158,7 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
         var molFile = itemModel.attributes.mdlmol;
         var molecule = ChemDoodle.readMOL(molFile);
         molecule.scaleToAverageBondLength(14.4);
-        viewerCanvas.loadMolecule(molecule);
+        viewerCanvas.loadMolecule(molecule); */
       }           
     }            
   }
@@ -175,8 +203,23 @@ ChWiSe.Router = Backbone.Router.extend({
     console.log('search route with query string: ' + querystring);
     //Parse params
     var params = ChWiSe.Utils.parseQueryString( querystring );
-    ChWiSe.Models.searchResults = new ChWiSe.Models.SearchResults({query: query});
-    ChWiSe.Models.searchResults.fetch();   
+    if (ChWiSe.Models.searchResults) {
+      ChWiSe.Models.searchResults.reset();
+      ChWiSe.Views.view.render();
+    }
+    //ChWiSe.Models.searchResults = new ChWiSe.Models.SearchResults([], {query: params.q, structureQuery: params.sq});
+    if (params.q) {
+      ChWiSe.Models.searchResults.query = params.q;
+    }
+    if (params.sq) {
+      ChWiSe.Models.searchResults.structureQuery = params.sq;    
+    }
+console.log("New model")        
+console.log(ChWiSe.Models.searchResults)    
+    ChWiSe.Models.searchResults.fetch({success: function(){
+console.log("On success fetch result:")
+console.log(ChWiSe.Models.searchResults); // => 2 (collection have been populated)
+    }});   
   },
 
   detail: function( ) {

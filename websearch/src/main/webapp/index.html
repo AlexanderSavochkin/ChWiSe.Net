@@ -24,21 +24,22 @@
     <script type="text/javascript" src="js/ChemDoodleWeb.js"></script>    
     <script type="text/javascript" src="js/ChemDoodleWeb-sketcher.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
-    <script type="text/javascript" src="js/bootstrap-paginator.min.js"></script>
     <script type="text/javascript" src="js/spin.min.js"></script>   
     <script type="text/javascript" src="js/chwise.net.js"></script>
 
-
-
     <script type="text/template" id="compoundresult">
        <li>
+<% console.log("In template:") %>       
+<% console.log(responseRecord) %>       
           <div class="panel panel-default">
               <div class="panel-body">
                  <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecord.title %>"><%= responseRecord.title %></a></h4>
 
                  <div  class="col-md-8" >
                     <div class="row">
-                       <h5>Synonyms: <% for(var j = 0; j < responseRecord.synonyms.length; ++j) { %> &nbsp; <%= responseRecord.synonyms[j] %> <% } %></h5>
+                       <% if (responseRecord.synonyms) { %>
+                        <h5>Synonyms: <% for(var j = 0; j < responseRecord.synonyms.length; ++j) { %> &nbsp; <%= responseRecord.synonyms[j] %> <% } %></h5>
+                       <% } %>
                     </div>
 
                     <div class="row">
@@ -153,10 +154,10 @@
       <div class="container">
         <form id="search-form">
           <div class="input-group,wide-input" >
-            <input type="text" class="form-control" placeholder="Free text" name="textquery">
+            <input type="text" class="form-control" placeholder="Free text" id="textquery" name="textquery">
           </div>
           <div class="input-group">
-            <input id="smilesEdit" type="text" class="form-control" placeholder="Structure in SMILES" name="structurequery" >
+            <input id="smilesEdit" type="text" class="form-control" placeholder="Structure in SMILES" id="structurequery" name="structurequery" >
             <span class="input-group-btn">
               <a data-toggle="modal" href="#structEditor" class="btn btn-default">Start sturcture editor</a>
             </span>
