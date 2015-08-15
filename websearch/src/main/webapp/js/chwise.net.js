@@ -61,8 +61,6 @@ ChWiSe.Models.SearchResults = Backbone.Collection.extend({
   },
 
   parse: function(response) {
-console.log("Parse:")
-console.log( response );
     return response.result;
   }
 });
@@ -86,7 +84,7 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
     // darkens the default JMol color of sulfur so it appears on white backgrounds
     ChemDoodle.ELEMENT['S'].jmolColor = '#B9A130';
     // initializes the SketcherCanvas
-    this.sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {oneMolecule:false});
+    this.sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, {useServices:false, oneMolecule:false, includeToolbar:true, includeQuery:false});
     // sets terminal carbon labels to display
     this.sketcher.specs.atoms_displayTerminalCarbonLabels_2D = true;
     // sets atom labels to be colored by JMol colors, which are easy to recognize
@@ -97,7 +95,8 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
     this.sketcher.specs.shapes_color = 'c10000';
     // because we do not load any content, we need to repaint the sketcher, otherwise we would just see an empty area with the toolbar
     // however, you can instead use one of the Canvas.load... functions to pre-populate the canvas with content, then you don't need to call repaint
-    this.sketcher.repaint();    
+    this.sketcher.repaint();
+
   },
 
   render: function() {
@@ -116,7 +115,8 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
 
   events: {
     'scroll': 'checkScroll',
-    'click #search-button': 'clickSearch'      
+    'click #search-button': 'clickSearch',
+    'click .chwise-btn-finishedit': 'finishEdit'
   },
 
   checkScroll: function () {
@@ -129,9 +129,55 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
   clickSearch: function() {
     var q = $("#textquery").val();
     var sq = $("#smilesEdit").val();
-console.log('Clicksearch! q=' + q + ", sq = " + sq);
-console.log(this)
     ChWiSe.router.navigate("search?q=" + q + "&sq=" + sq, true); 
+  },
+
+  finishEdit: function() {
+
+
+
+    var mol = this.sketcher.getMolecule();
+    var molFile = ChemDoodle.writeMOL(mol);
+
+    //Setup waiting indicator
+    var opts = {
+        lines: 5, // The number of lines to draw
+        length: 20, // The length of each line
+        width: 10, // The line thickness
+        radius: 30, // The radius of the inner circle
+        corners: 1, // Corner roundness (0..1)
+        rotate: 0, // The rotation offset
+        direction: 1, // 1: clockwise, -1: counterclockwise
+        color: '#000', // #rgb or #rrggbb or array of colors
+        speed: 1, // Rounds per second
+        trail: 60, // Afterglow percentage
+        shadow: false, // Whether to render a shadow
+        hwaccel: false, // Whether to use hardware acceleration
+        className: 'spinner', // The CSS class to assign to the spinner
+        zIndex: 2e9, // The z-index (defaults to 2000000000)
+        top: '50%', // Top position relative to parent
+        left: '50%' // Left position relative to parent
+    };
+
+    var spinner = new Spinner(opts);
+    //Start wait indicator
+    var target = document.getElementById('structEditingArea'); //TODO: Use jQuery-style
+    spinner.spin(target);
+
+    //Request server to convert MOL->SMILES
+    $.ajax({
+        type: "POST",
+        url: "convertmol",
+        data: {mol:molFile},
+    })
+    .done( function( serverResponse ) {
+      spinner.stop(); //Stop wait indicator if provided
+      $('#smilesEdit').val( serverResponse.smiles );
+      $('#structEditor').modal('hide');
+    })        // .done( getMolToSmilesConverted(spinner) )
+    .fail( function( xmlHttpRequest, statusText, errorThrown ) {  //Conversion error handler
+      alert("Error in getting MOL->SMILES conversion result from server!");
+    });
   },
 
   renderNewEntries: function() {   
@@ -147,7 +193,6 @@ console.log(this)
         //Initialize ChemDoodle canvas
 
         var canvasId = "moleculeCanvas" + itemModel.get('uid');
-console.log("render new entry: uid = " + canvasId)        
 
         var viewerCanvas = new ChemDoodle.ViewerCanvas( canvasId, 200, 200 );
         viewerCanvas.specs.bonds_width_2D = .6;
@@ -202,7 +247,6 @@ ChWiSe.Router = Backbone.Router.extend({
   },
 
   search: function( querystring ) {
-    console.log('search route with query string: ' + querystring);
     //Parse params
     var params = ChWiSe.Utils.parseQueryString( querystring );
     if (ChWiSe.Models.searchResults) {
@@ -216,11 +260,8 @@ ChWiSe.Router = Backbone.Router.extend({
     if (params.sq) {
       ChWiSe.Models.searchResults.structureQuery = params.sq;    
     }
-console.log("New model")        
-console.log(ChWiSe.Models.searchResults)    
     ChWiSe.Models.searchResults.fetch({success: function(){
-console.log("On success fetch result:")
-console.log(ChWiSe.Models.searchResults); // => 2 (collection have been populated)
+      //
     }});   
   },
 
