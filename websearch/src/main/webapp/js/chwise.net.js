@@ -274,11 +274,11 @@ ChWiSe.Router = Backbone.Router.extend({
 
 $(document).ready(function () {
   ChWiSe.router = new ChWiSe.Router();
-  Backbone.history.start();
   ChWiSe.Models.searchResults = new ChWiSe.Models.SearchResults();
   ChWiSe.Views.view = new ChWiSe.Views.SearchResults({
     model:ChWiSe.Models.searchResults, 
     el: $("#topview"),
     resultlist: $("#results-list")
   });
+  Backbone.history.start();
 });
