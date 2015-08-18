@@ -58,10 +58,15 @@ ChWiSe.Models.SearchResults = Backbone.Collection.extend({
     if (options.structureQuery) {
       this.structureQuery = options.structureQuery;
     }
+    this.currentResultNumber = 0;
   },
 
   parse: function(response) {
-    return response.result;
+    var result = response.result;
+    for (var i = 0; i < result.length; ++i) {
+      result[i].resultNumber = ++this.currentResultNumber; 
+    }
+    return result;
   }
 });
 
@@ -97,6 +102,15 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
     // however, you can instead use one of the Canvas.load... functions to pre-populate the canvas with content, then you don't need to call repaint
     this.sketcher.repaint();
 
+    var self = this;
+    this.infiniScroll = new Backbone.InfiniScroll(this.model, {
+      success: function() {
+        self.infiniScroll.enableFetch();
+      },
+      untilAttr: "resultNumber",
+      param: "from"
+    });
+
   },
 
   render: function() {
@@ -114,16 +128,8 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
   },
 
   events: {
-    'scroll': 'checkScroll',
     'click #search-button': 'clickSearch',
     'click .chwise-btn-finishedit': 'finishEdit'
-  },
-
-  checkScroll: function () {
-    if( !this.isLoading && this.el.scrollTop + this.el.clientHeight + ChWiSe.Constants.triggerPoint > this.el.scrollHeight ) {
-      this.twittermodel.page += 1; // Load next page
-      this.loadResults();
-    }
   },
 
   clickSearch: function() {
@@ -133,9 +139,6 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
   },
 
   finishEdit: function() {
-
-
-
     var mol = this.sketcher.getMolecule();
     var molFile = ChemDoodle.writeMOL(mol);
 
@@ -180,7 +183,7 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
     });
   },
 
-  renderNewEntries: function() {   
+  renderNewEntries: function() {
     for (var i = 0; i < this.model.length; ++i) {
       var itemModel = this.model.at(i);        
       if ( !itemModel.attributes.rendered ) {
@@ -253,16 +256,20 @@ ChWiSe.Router = Backbone.Router.extend({
       ChWiSe.Models.searchResults.reset();
       ChWiSe.Views.view.render();
     }
-    //ChWiSe.Models.searchResults = new ChWiSe.Models.SearchResults([], {query: params.q, structureQuery: params.sq});
+
     if (params.q) {
       ChWiSe.Models.searchResults.query = params.q;
     }
     if (params.sq) {
       ChWiSe.Models.searchResults.structureQuery = params.sq;    
     }
-    ChWiSe.Models.searchResults.fetch({success: function(){
+    ChWiSe.Models.currentResultNumber = 0;
+
+    ChWiSe.Models.searchResults.fetch({success: function() {
       //
-    }});   
+    }});
+
+    ChWiSe.Views.view.infiniScroll.resetScroll();  
   },
 
   detail: function( ) {
