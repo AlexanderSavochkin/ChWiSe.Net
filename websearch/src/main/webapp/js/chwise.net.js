@@ -259,10 +259,16 @@ ChWiSe.Router = Backbone.Router.extend({
 
     if (params.q) {
       ChWiSe.Models.searchResults.query = params.q;
+    } else {
+      ChWiSe.Models.searchResults.query = "";
     }
+
     if (params.sq) {
       ChWiSe.Models.searchResults.structureQuery = params.sq;    
+    } else {
+      ChWiSe.Models.searchResults.structureQuery = "";
     }
+
     ChWiSe.Models.currentResultNumber = 0;
 
     ChWiSe.Models.searchResults.fetch({success: function() {
