@@ -29,8 +29,6 @@
 
     <script type="text/template" id="compoundresult">
        <li>
-<% console.log("In template:") %>       
-<% console.log(responseRecord) %>       
           <div class="panel panel-default">
               <div class="panel-body">
                  <h4><a href="http://en.wikipedia.org/wiki/<%= responseRecord.title %>"><%= responseRecord.title %></a></h4>
@@ -62,7 +60,6 @@
                  </div> <!-- <div  class="col-md-8" > -->
 
                  <div class = "col-md-4">
-<% console.log("In template cid = " + responseRecord.cid) %>                 
                      <canvas id="moleculeCanvas<%= responseRecord.uid %>" ></canvas>
                  </div>
 
@@ -158,7 +155,7 @@
             <input type="text" class="form-control" placeholder="Free text" id="textquery" name="textquery">
           </div>
           <div class="input-group">
-            <input id="smilesEdit" type="text" class="form-control" placeholder="Structure in SMILES" id="structurequery" name="structurequery" >
+            <input type="text" class="form-control" placeholder="Structure in SMILES" id="structurequery" name="structurequery" >
             <span class="input-group-btn">
               <a data-toggle="modal" href="#structEditor" class="btn btn-default">Start sturcture editor</a>
             </span>

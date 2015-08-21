@@ -134,7 +134,7 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
 
   clickSearch: function() {
     var q = $("#textquery").val();
-    var sq = $("#smilesEdit").val();
+    var sq = $("#structurequery").val();
     ChWiSe.router.navigate("search?q=" + q + "&sq=" + sq, true); 
   },
 
@@ -175,7 +175,7 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
     })
     .done( function( serverResponse ) {
       spinner.stop(); //Stop wait indicator if provided
-      $('#smilesEdit').val( serverResponse.smiles );
+      $('#structurequery').val( serverResponse.smiles );
       $('#structEditor').modal('hide');
     })        // .done( getMolToSmilesConverted(spinner) )
     .fail( function( xmlHttpRequest, statusText, errorThrown ) {  //Conversion error handler
@@ -259,14 +259,18 @@ ChWiSe.Router = Backbone.Router.extend({
 
     if (params.q) {
       ChWiSe.Models.searchResults.query = params.q;
+      $("#textquery").val(params.q);
     } else {
       ChWiSe.Models.searchResults.query = "";
+      $("#textquery").val("");     
     }
 
     if (params.sq) {
-      ChWiSe.Models.searchResults.structureQuery = params.sq;    
+      ChWiSe.Models.searchResults.structureQuery = params.sq;
+      $("#structurequery").val( params.sq );
     } else {
       ChWiSe.Models.searchResults.structureQuery = "";
+      $("#structurequery").val("");
     }
 
     ChWiSe.Models.currentResultNumber = 0;
