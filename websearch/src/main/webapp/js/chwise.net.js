@@ -133,9 +133,12 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
   },
 
   clickSearch: function() {
-    var q = $("#textquery").val();
-    var sq = $("#structurequery").val();
-    ChWiSe.router.navigate("search?q=" + q + "&sq=" + sq, true); 
+    var params = {
+	    q:$("#textquery").val(),
+	    sq:$("#structurequery").val()
+    };
+    var encodedURIfragment = $.param( params );
+    ChWiSe.router.navigate("search?" + encodedURIfragment, {trigger: true} ); 
   },
 
   finishEdit: function() {
@@ -238,6 +241,7 @@ ChWiSe.Utils.parseQueryString = function(queryString) {
 
 
 ChWiSe.Router = Backbone.Router.extend({
+
   routes: { // sets the routes
     "" : "showWelcomePage", // http://tutorial.com
     "search?*queryString" : "search",
@@ -250,6 +254,7 @@ ChWiSe.Router = Backbone.Router.extend({
   },
 
   search: function( querystring ) {
+console.log( querystring )	
     //Parse params
     var params = ChWiSe.Utils.parseQueryString( querystring );
     if (ChWiSe.Models.searchResults) {
