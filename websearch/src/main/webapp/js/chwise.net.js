@@ -254,8 +254,8 @@ ChWiSe.Router = Backbone.Router.extend({
   },
 
   search: function( querystring ) {
-console.log( querystring )	
     //Parse params
+    var querystring = querystring.replace(/\+/g, '%20');
     var params = ChWiSe.Utils.parseQueryString( querystring );
     if (ChWiSe.Models.searchResults) {
       ChWiSe.Models.searchResults.reset();
