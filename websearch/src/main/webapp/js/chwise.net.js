@@ -37,26 +37,20 @@ ChWiSe.Models.SearchResults = Backbone.Collection.extend({
 
   url: function() {
     // send the url along with the serialized query params
-    var result = this.urlRoot; 
-    var firstParam = true;
-    if (this.query) {
-      firstParam = false;
-      result += ("?" + "q=" + this.query);      
-    }
-    if (this.structureQuery) {
-      result += firstParam ? "?" : "&";
-      result += "sq=" + this.structureQuery;
-    }
+    var result = this.urlRoot;
+    var encodedURIfragment = $.param( this.params );
+    result += ('?' +  encodedURIfragment);
     return result;
   },
 
   initialize: function(models, options) {
     options || (options = {});
+    this.params = {};
     if (options.query) {
-        this.query = options.query;
+        this.params.q = options.query;
     };
     if (options.structureQuery) {
-      this.structureQuery = options.structureQuery;
+      this.params.sq = options.structureQuery;
     }
     this.currentResultNumber = 0;
   },
@@ -262,19 +256,16 @@ ChWiSe.Router = Backbone.Router.extend({
       ChWiSe.Views.view.render();
     }
 
+    ChWiSe.Models.searchResults.params = params;
     if (params.q) {
-      ChWiSe.Models.searchResults.query = params.q;
       $("#textquery").val(params.q);
     } else {
-      ChWiSe.Models.searchResults.query = "";
       $("#textquery").val("");     
     }
 
     if (params.sq) {
-      ChWiSe.Models.searchResults.structureQuery = params.sq;
       $("#structurequery").val( params.sq );
     } else {
-      ChWiSe.Models.searchResults.structureQuery = "";
       $("#structurequery").val("");
     }
 
