@@ -163,7 +163,7 @@ public class SearchServlet extends HttpServlet {
         catch (ParseException e) {
             JSONObject jsonFailure = SearchFailureJSONResponse.create ("info", "We couldn't understand query", "Use quotes for phrase search. Use AND,OR,NOT for boolean search");
             try {
-                jsonResponse.put( "failure",  jsonFailure );
+                jsonResponse.put( "messages",  jsonFailure );
             } catch (JSONException e1) {
                 e1.printStackTrace();
                 throw new RuntimeException(e1);

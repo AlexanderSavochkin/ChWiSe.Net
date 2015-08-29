@@ -11,10 +11,13 @@ window.ChWiSe = {  // top level namespace is declared on the window
   Utils: {}
 };
 
-ChWiSe.Models.SearchResultCompoundModel = Backbone.Model.extend({
+ChWiSe.Models.SearchResultCompound = Backbone.Model.extend({
   defaults: {
     rendered: false
   }
+});
+
+ChWiSe.Models.ServerMessage = Backbone.Model.extend({
 });
 
 ChWiSe.Views.SearchResultCompound = Backbone.View.extend({
@@ -29,6 +32,20 @@ ChWiSe.Views.SearchResultCompound = Backbone.View.extend({
     this.$el.html(this.template( {responseRecord: this.model.attributes} ));
     return this;
   }
+});
+
+ChWiSe.Views.ServerMessage = Backbone.View.extend({
+  tagName: "",
+
+  initialize: function() {
+    this.template = _.template( $('#servermessage').html() );
+  },
+
+  render: function() {
+    this.$el.html(this.template( {serverMessage: this.model.attributes} ));
+    return this;
+  }
+
 });
 
 ChWiSe.Models.SearchResults = Backbone.Collection.extend({
@@ -56,11 +73,19 @@ ChWiSe.Models.SearchResults = Backbone.Collection.extend({
   },
 
   parse: function(response) {
-    var result = response.result;
-    for (var i = 0; i < result.length; ++i) {
-      result[i].resultNumber = ++this.currentResultNumber; 
+    //Process error/warnings/messages
+    if ( _.isObject(response.messages) ) {
+        this.serverMessage = new ChWiSe.Models.ServerMessage(response.messages); //For now we expect the only one msg
     }
-    return result;
+
+    if ( _.isObject(response.result) ) {
+      var result = response.result;
+      for (var i = 0; i < result.length; ++i) {
+        result[i].resultNumber = ++this.currentResultNumber; 
+      }
+      return result;
+    }
+    return [];
   }
 });
 
@@ -107,6 +132,19 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
 
   },
 
+  //
+  clearMessage: function() {
+    $('#server-messages-area').empty();
+  },
+
+  //Renders server message
+  renderMessage: function() {
+    if ( _.isObject( this.model.serverMessage ) ) {
+      var messageView = new ChWiSe.Views.ServerMessage({model:this.model.serverMessage });
+      $('#server-messages-area').append( messageView.render().el );       
+    }
+  },
+
   render: function() {
     this.resultlist.empty();
     for (var i = 0; i < this.model.length; ++i) {
@@ -128,8 +166,8 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
 
   clickSearch: function() {
     var params = {
-	    q:$("#textquery").val(),
-	    sq:$("#structurequery").val()
+	    q:$("#textquery").val().replace(/%([^\d].)/, "%25$1"),
+	    sq:$("#structurequery").val().replace(/%([^\d].)/, "%25$1")
     };
     var encodedURIfragment = $.param( params );
     ChWiSe.router.navigate("search?" + encodedURIfragment, {trigger: true} ); 
@@ -257,6 +295,9 @@ ChWiSe.Router = Backbone.Router.extend({
     }
 
     ChWiSe.Models.searchResults.params = params;
+    ChWiSe.Models.searchResults.serverMessage = null;
+    ChWiSe.Views.view.clearMessage();
+
     if (params.q) {
       $("#textquery").val(params.q);
     } else {

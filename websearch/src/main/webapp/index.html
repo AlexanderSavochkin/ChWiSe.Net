@@ -66,66 +66,23 @@
               </div> <!-- <div class="panel panel-default"> -->
           </div> <!-- <div class="panel-body"> -->
        </li>
-
     </script>
 
-
-    <script type="text/template" id="chwise-details-template">
-        <div class="panel panel-default">
-           <div class="panel-body">
-              <h3><%=detailsInfo.title %></h3>
-
-              <div  class="col-md-8" >
-                  <div class="row">
-                     <h5>Synonyms: <% for(var j = 0; j < detailsInfo.synonyms.length; ++j) { %> &nbsp; <%= detailsInfo.synonyms[j] %> <% } %></h5>
-                  </div>
-
-                    <div class="row">
-                       <h5>
-                       <% if ("cas" in detailsInfo.externalrefs) { %>
-                            CAS Number: <%= detailsInfo.externalrefs["cas"] %>;
-                       <% }
-                          if ("pubchem" in detailsInfo.externalrefs) { %>
-                              PubChem Id: <%= detailsInfo.externalrefs["pubchem"] %>;
-                       <% }
-                          if ("chemspider" in detailsInfo.externalrefs) { %>
-                              ChemSpider Id: <%= detailsInfo.externalrefs["chemspider"] %>;
-                       <% } %>
-                       </h5>
-                    </div>
-
-                    <div class="row">
-                         <%= detailsInfo.textFragment %>
-                    </div>
-                 </div> <!-- <div  class="col-md-8" > -->
-
-                 <div class = "col-md-4">
-                     <canvas id="detailsMoleculeCanvas" ></canvas>
-                 </div>
-
-           </div> <!-- <div class="panel panel-default"> -->
-        </div> <!-- <div class="panel-body"> -->
-    </script>
-
-
-
-
-
-    <script type="text/template" id="chwise-error-template">
-       <% if (severity == "info") { %>
+    <script type="text/template" id="servermessage">
+       <% if (serverMessage.severity == "info") { %>
           <div class="alert alert-info alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            <strong>We couldnt understand your query</strong> <%=message%>
+            <strong>We couldnt understand your query</strong> <%=serverMessage.message%>
           </div>
-       <% } else if (severity == "warning") { %>
+       <% } else if (serverMessage.severity == "warning") { %>
           <div class="alert alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            <strong>Warning</strong> <%=message%>
+            <strong>Warning</strong> <%=serverMessage.message%>
           </div>
-       <% } else if (severity == "error") { %>
+       <% } else if (serverMessage.severity == "error") { %>
           <div class="alert alert-error alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            <strong>Ups</strong> <%=message%>
+            <strong>Ups</strong> <%=serverMessage.message%>
           </div>
        <% } %>
     </script>
@@ -188,7 +145,7 @@
       </div>
 
       <!-- Problems with search notifications -->
-      <div class="container" id="search-problem-notification" >
+      <div class="container" id="server-messages-area" >
       </div>
 
       <!-- Results -->
