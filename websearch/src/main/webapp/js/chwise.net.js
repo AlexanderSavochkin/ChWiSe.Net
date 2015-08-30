@@ -35,7 +35,7 @@ ChWiSe.Views.SearchResultCompound = Backbone.View.extend({
 });
 
 ChWiSe.Views.ServerMessage = Backbone.View.extend({
-  tagName: "",
+  //tagName: "",
 
   initialize: function() {
     this.template = _.template( $('#servermessage').html() );
@@ -76,6 +76,7 @@ ChWiSe.Models.SearchResults = Backbone.Collection.extend({
     //Process error/warnings/messages
     if ( _.isObject(response.messages) ) {
         this.serverMessage = new ChWiSe.Models.ServerMessage(response.messages); //For now we expect the only one msg
+	this.trigger("servermessage");
     }
 
     if ( _.isObject(response.result) ) {
@@ -98,6 +99,8 @@ ChWiSe.Views.SearchResults = Backbone.View.extend({
   initialize: function() {        
     this.listenTo(this.model, 'add', this.renderNewEntries);
     this.listenTo(this.model, 'reset', this.clear);
+    this.listenTo(this.model, 'servermessage', this.renderMessage);
+
     this.resultlist = $("#results-list");
 
     this.render();
