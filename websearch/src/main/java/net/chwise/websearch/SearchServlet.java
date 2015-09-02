@@ -173,7 +173,7 @@ public class SearchServlet extends HttpServlet {
             if (e.getCause() instanceof InvalidSmilesException) {
                 JSONObject jsonFailure = SearchFailureJSONResponse.create("info", "We couldn't understand query", "Your structure formula doesn't seem like correct SMILES. Use structure editor for generating correct SMILES structures");
                 try {
-                    jsonResponse.put( "failure",  jsonFailure );
+                    jsonResponse.put( "messages",  jsonFailure );
                 } catch (JSONException e1) {
                     e1.printStackTrace();
                     throw new RuntimeException(e1);
