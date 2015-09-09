@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2013-2014 Alexander Savochkin
+ Copyright (c) 2013-2015 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -20,15 +20,18 @@
 
 package net.chwise.websearch;
 
+import net.chwise.common.document.DocDefinitions;
 import net.chwise.documents.HighlightedFragmentsRetriever;
 import net.chwise.index.ConfigurableDirectorySource;
 
+import net.chwise.websearch.jsonmessages.SearchFailureJSONResponse;
+import net.chwise.websearch.jsonmessages.SpellCorrectionsJSONResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
@@ -36,6 +39,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -51,6 +55,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.lang.Math;
@@ -121,9 +126,21 @@ public class SearchServlet extends HttpServlet {
         JSONArray jsonResult = new JSONArray();
         try {
             //Preapre for search
+            //Main direcotry
             String directorySourceClassName = getServletConfig().getInitParameter("directorySourceClassName");
             String directorySourceParams = getServletConfig().getInitParameter("directorySourceParams");
+
+            //Speller directory
+            boolean isSpellerEnabled = getServletConfig().getInitParameter("spellerEnabled").equals("true");
+            String spellerDirectorySourceClassName = getServletConfig().getInitParameter("spellerDirectorySourceClassName");
+            String spellerDirectorySourceParams = getServletConfig().getInitParameter("spellerDirectorySourceParams");
+
             Directory directory = directorySource.getDirectory(directorySourceClassName, directorySourceParams);
+
+            Directory spellerDirectory = null;
+            if (isSpellerEnabled) {
+                spellerDirectory = directorySource.getDirectory(spellerDirectorySourceClassName, spellerDirectorySourceParams);
+            }
 
             IndexReader reader = null;
 
@@ -159,9 +176,30 @@ public class SearchServlet extends HttpServlet {
             jsonResponse.put( "result", jsonResult );
             jsonResponse.put( "total", totalResults );
 
+            //Suggest spell corrections
+            //TODO: Parse only textual part (no structure)
+            if (isSpellerEnabled) {
+                Set<Term> terms = new HashSet<Term>();
+                query.extractTerms(terms);
+                Map<String, String> fixes = new HashMap<String, String>();
+
+                terms.retainAll( Arrays.asList(DocDefinitions.getSpellerDictionaryFields()) );
+
+                SpellChecker spellChecker = new SpellChecker(spellerDirectory);
+                for (Term term : terms) {
+                    if (reader.totalTermFreq(term) == 0) {
+                        String[] similarWords = spellChecker.suggestSimilar(term.text(), 1, 0.8f);
+                        fixes.put(term.text(), similarWords[0]);
+                    }
+                }
+
+                //Wrap fixes to JSON response
+                JSONObject spellCorrectionMessage = SpellCorrectionsJSONResponse.create(fixes);
+                jsonResponse.put( "messages",  spellCorrectionMessage );
+            }
         }
         catch (ParseException e) {
-            JSONObject jsonFailure = SearchFailureJSONResponse.create ("info", "We couldn't understand query", "Use quotes for phrase search. Use AND,OR,NOT for boolean search");
+            JSONObject jsonFailure = SearchFailureJSONResponse.create("info", "We couldn't understand query", "Use quotes for phrase search. Use AND,OR,NOT for boolean search");
             try {
                 jsonResponse.put( "messages",  jsonFailure );
             } catch (JSONException e1) {

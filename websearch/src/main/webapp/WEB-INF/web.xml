@@ -17,6 +17,14 @@
             <param-name>directorySourceParams</param-name>
             <param-value>WEB-INF/index</param-value>
         </init-param>
+        <init-param>
+            <param-name>spellerEnabled</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>spellerDirectorySourceClassName</param-name>
+            <param-value>net.chwise.index.FSDirectoryInitializer</param-value>
+        </init-param>
     </servlet>
 
     <servlet>

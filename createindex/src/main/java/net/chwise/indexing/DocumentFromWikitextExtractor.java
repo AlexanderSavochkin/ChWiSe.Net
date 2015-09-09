@@ -20,14 +20,9 @@
 
 package net.chwise.indexing;
 
-import net.chwise.common.conversion.ToMOLConverter;
-import net.chwise.common.document.DocDefinitions;
 import net.chwise.dataextraction.InfoBoxDataExtractor;
+import net.chwise.dataextraction.InfoboxDataProcessor;
 import net.chwise.dataextraction.SimpleFieldToFieldProcessor;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.TextField;
 import org.sweble.wikitext.engine.EngineException;
 import org.sweble.wikitext.engine.PageId;
 import org.sweble.wikitext.engine.PageTitle;
@@ -37,28 +32,21 @@ import org.sweble.wikitext.engine.nodes.EngProcessedPage;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class DocumentFromWikitextExtractor {
 
-    Map<String, Integer> infoboxKeysCout = new HashMap<String, Integer>();
-    boolean calculateStatistics =  false;
     // Set-up a simple wiki configuration
     WikiConfig config = DefaultConfigEnWp.generate();
     final int wrapCol = 80;
     // Instantiate a compiler for wiki pages
     WtEngineImpl engine = new WtEngineImpl(config);
+    //InfoboxDataProcessor infoboxDataProcessor = new SimpleFieldToFieldProcessor();
 
-    ToMOLConverter toMOLConverter = new ToMOLConverter();
-
-    public DocumentFromWikitextExtractor(boolean calculateStatistics) {
-        this.calculateStatistics = calculateStatistics;
-    }
 
     public DocumentFromWikitextExtractor() {}
 
-    public Document getLuceneDocument(SimpleFieldToFieldProcessor simpleFieldToFieldProcessor, String pathStr, String title, String smiles, String wikitext) throws LinkTargetException, EngineException {
+    public WikiArticle getArticle(InfoboxDataProcessor infoboxDataProcessor, String pathStr, String title, String smiles, String wikitext) throws LinkTargetException, EngineException {
         // Retrieve a page
         PageTitle pageTitle = PageTitle.make(config, pathStr);
 
@@ -75,28 +63,7 @@ public class DocumentFromWikitextExtractor {
         InfoBoxDataExtractor infoBoxDataExtractor = new InfoBoxDataExtractor();
         Map<String, String> infoboxFields = (Map<String, String>) infoBoxDataExtractor.go(cp.getPage());
 
-        //Update statistics if required
-        if (calculateStatistics) {
-            for (String key : infoboxFields.keySet()) {
-                int count = infoboxKeysCout.containsKey(key) ? infoboxKeysCout.get(key) : 0;
-                infoboxKeysCout.put(key, count + 1);
-            }
-        }
-
-        //Create lucene document
-        Document document = new Document();
-        document.add( new TextField( DocDefinitions.TITLE_FIELD_NAME, title, Field.Store.YES ) );
-        document.add( new TextField( DocDefinitions.TEXT_FIELD_NAME, text, Field.Store.YES ) );
-        document.add( new TextField( DocDefinitions.STRUCTURE_SMILES_FIELD_NAME, smiles, Field.Store.YES ) );
-        document.add( new TextField( DocDefinitions.URL_FIELD_NAME, "#", Field.Store.YES ) );
-        document.add( new StoredField( DocDefinitions.STRUCTURE_MOL_FIELD_NAME, toMOLConverter.MOLChargesKludge(toMOLConverter.convert(smiles)) ) );
-
-        simpleFieldToFieldProcessor.process(infoboxFields, document);
-
-        return document;
-    }
-
-    public Map<String, Integer> getInfoboxKeysStatistics() {
-        return infoboxKeysCout;
+        WikiArticle wikiArticle = new WikiArticle(title, text, smiles, infoboxFields, infoboxDataProcessor);
+        return wikiArticle;
     }
 }

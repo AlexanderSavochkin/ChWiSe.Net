@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2014 Alexander Savochkin
+ Copyright (c) 2015 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -18,23 +18,25 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.chwise.websearch;
+package net.chwise.websearch.jsonmessages;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class SearchFailureJSONResponse {
+import java.util.Map;
 
-    private final static String SEVERITY_JSON_FIELD = "severity";
-    private final static String MESSAGE_JSON_FIELD = "message";
-    private final static String STRONG_JSON_FIELD = "strong";
+public class SpellCorrectionsJSONResponse {
 
-    static JSONObject create (String severity, String strong, String message) {
+    private final static String SPELLCORRECTIONS_JSON_FIELD = "spellcorrections";
+
+    public static JSONObject create (Map<String,String> corrections) {
         JSONObject jsonResponse = new JSONObject();
         try {
-            jsonResponse.put(SEVERITY_JSON_FIELD, severity );
-            jsonResponse.put(STRONG_JSON_FIELD, strong );
-            jsonResponse.put(MESSAGE_JSON_FIELD, message );
+            JSONObject jsonCorrections = new JSONObject();
+            for (Map.Entry<String, String> entry : corrections.entrySet()) {
+                jsonCorrections.put(entry.getKey(), entry.getValue());
+            }
+            jsonResponse.put(SPELLCORRECTIONS_JSON_FIELD, jsonCorrections );
         } catch (JSONException e) {
             throw new RuntimeException("Couldn't create alert notification message in JSON forma", e);
         }

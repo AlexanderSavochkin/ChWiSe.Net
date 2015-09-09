@@ -48,6 +48,8 @@ public class DocDefinitions {
     private static String[] textFields = null;
     private static Map<String, Float> fieldWeights = null;
 
+    private static String[] spellerDictionaryFields = null;
+
     public static Analyzer getAnalyzer() {
         Map<String,Analyzer> analyzerPerField = new HashMap<String,Analyzer>();
         Analyzer smilesAnalyzer = new SmilesAnalyzer();
@@ -66,10 +68,18 @@ public class DocDefinitions {
     }
 
     public static String[] getTextFields() {
-        if (textFields == null)
+        if (textFields == null) {
             textFields = new String[]{TITLE_FIELD_NAME, TEXT_FIELD_NAME, SYNONYM_FIELD_NAME, CAS_NO,
-                PUBCHEM_ID, CHEMSPIDER, CHEBI};
+                    PUBCHEM_ID, CHEMSPIDER, CHEBI};
+        }
         return textFields;
+    }
+
+    public static String[] getSpellerDictionaryFields() {
+        if (spellerDictionaryFields == null) {
+            spellerDictionaryFields = new String[]{TITLE_FIELD_NAME, TEXT_FIELD_NAME, SYNONYM_FIELD_NAME};
+        }
+        return spellerDictionaryFields;
     }
 
     public static Map<String, Float> getFieldWeights() {

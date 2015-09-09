@@ -20,20 +20,6 @@
 
 package net.chwise.dataextraction;
 
-import net.chwise.common.document.DocDefinitions;
-import net.chwise.indexing.FileIndexer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopScoreDocCollector;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.util.Version;
 import org.junit.Test;
 import org.sweble.wikitext.engine.EngineException;
 import org.sweble.wikitext.engine.PageId;
@@ -44,7 +30,6 @@ import org.sweble.wikitext.engine.nodes.EngProcessedPage;
 import org.sweble.wikitext.engine.utils.DefaultConfigEnWp;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 
-import java.io.IOException;
 import java.util.Map;
 
 import static org.junit.Assert.*;

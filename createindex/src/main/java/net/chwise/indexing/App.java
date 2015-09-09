@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2013-2014 Alexander Savochkin
+ Copyright (c) 2013-2015 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -22,16 +22,16 @@ package net.chwise.indexing;
 
 import net.chwise.common.document.DocDefinitions;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.spell.Dictionary;
+import org.apache.lucene.search.spell.LuceneDictionary;
+import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
 
 import java.io.*;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -60,36 +60,54 @@ public class App
 
         String compoundsListFileName = null;
         String infoboxStatisticsFileName = null;
+        String spellerIndexPath = null;
 
-        for (int i = 2; i < args.length - 1;)
-        {
-            if ("--printnameslist".equals(args[i]))
-            {
+        for (int i = 2; i < args.length - 1;) {
+            if ("--printnameslist".equals(args[i])) {
                 compoundsListFileName = args[i + 1];
                 i += 2;
                 continue;
             }
 
-            if ("--infoboxstatistics".equals(args[i]))
-            {
+            if ("--infoboxstatistics".equals(args[i])) {
                 infoboxStatisticsFileName = args[i + 1];
                 i += 2;
                 continue;
             }
 
+            if ("--speller".equals(args[i])) {
+                spellerIndexPath = args[i + 1];
+                i += 2;
+                continue;
+            }
         }
 
 
-
+        System.err.println("Starting rimary index creation...");
         Directory directory = new SimpleFSDirectory( new File(indexPath) );
         Analyzer analyzer = DocDefinitions.getAnalyzer();
         IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, analyzer);
         IndexWriter indexWriter = new IndexWriter( directory, config);
-        FileIndexer fileIndexer = new FileIndexer( indexWriter, infoboxStatisticsFileName != null, compoundsListFileName );
+        SimpleFileIndexer fileIndexer = new SimpleFileIndexer( indexWriter, compoundsListFileName );
         Files.walkFileTree(Paths.get(startFrom), fileIndexer);
         indexWriter.close();
         if (infoboxStatisticsFileName != null)
-            writeInfoboxesStatToFile(args[2], fileIndexer.getInfoboxKeysStatistics() );
-        System.err.println("Finished!");
+            writeInfoboxesStatToFile(args[2], fileIndexer.getInfoboxKeysStatistics());
+        System.err.println("Done!");
+
+        if (spellerIndexPath != null) {
+            System.err.println("Starting spell checking index...");
+            Directory spellerDirectory = new SimpleFSDirectory(new File(spellerIndexPath));
+
+            SpellChecker spell= new SpellChecker(spellerDirectory);
+            IndexReader primaryIndexReader = DirectoryReader.open(directory);
+
+            for (String spellField: DocDefinitions.getSpellerDictionaryFields()) {
+                Dictionary dict = new LuceneDictionary(primaryIndexReader, spellField);
+                spell.indexDictionary(dict, config, true );
+            }
+
+            System.err.println("Done!");
+        }
     }
 }

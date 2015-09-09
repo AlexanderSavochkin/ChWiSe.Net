@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2013-2015 Alexander Savochkin
+ Copyright (c) 2015 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -26,31 +26,23 @@ import org.apache.lucene.index.IndexWriter;
 import org.sweble.wikitext.engine.EngineException;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 
-public class FileIndexer extends SimpleFileVisitor<Path> {
-
+public abstract class FileProcessor extends SimpleFileVisitor<Path> {
     IndexWriter indexWriter;
-    DocumentFromWikitextExtractor documentFromWikitextExtractor;
+    DocumentFromWikitextExtractor documentFromWikitextExtractor;PrintWriter allCompoundNamesWriter = null;
 
-    PrintWriter allCompoundNamesWriter = null;
-
-    //private static Logger logger = Logger.getLogger( FileIndexer.class.getName() );
-
-    public FileIndexer(IndexWriter indexWriter) {
+    public FileProcessor(IndexWriter indexWriter) {
         this.indexWriter = indexWriter;
         documentFromWikitextExtractor = new DocumentFromWikitextExtractor();
-    }
-
-    FileIndexer(IndexWriter indexWriter, boolean calculateStatistics, String compoundNamesFileName) throws FileNotFoundException {
-        this.indexWriter = indexWriter;
-        documentFromWikitextExtractor = new DocumentFromWikitextExtractor(calculateStatistics);
-        allCompoundNamesWriter = new PrintWriter(compoundNamesFileName);
     }
 
     public void close() {
@@ -62,16 +54,18 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
     public FileVisitResult visitFile(
             Path aFile, BasicFileAttributes aAttrs
     )  {
-        //logger.info( "Processing file: " + aFile.toString() );
         System.err.println("Processing file: " + aFile.toString() );
         try {
-            Document doc = readFile( aFile );
-            indexWriter.addDocument(doc);
+            WikiArticle wikiArticle = readFile( aFile );
+            processDocument(wikiArticle);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return FileVisitResult.CONTINUE;
     }
+
+    abstract void processDocument(WikiArticle wikiArticle) throws Exception;
 
     @Override
     public FileVisitResult preVisitDirectory(
@@ -80,8 +74,7 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
         return FileVisitResult.CONTINUE;
     }
 
-
-    Document readFile( Path path ) throws IOException, LinkTargetException, EngineException {
+    WikiArticle readFile( Path path ) throws IOException, LinkTargetException, EngineException {
         SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
         String pathStr = path.toString();
         try (BufferedReader br = new BufferedReader(new FileReader( pathStr )))  {
@@ -103,14 +96,7 @@ public class FileIndexer extends SimpleFileVisitor<Path> {
                 line = br.readLine();
             }
             String wikitext = sb.toString();
-            return documentFromWikitextExtractor.getLuceneDocument(simpleFieldToFieldProcessor, pathStr, title, smiles, wikitext);
+            return documentFromWikitextExtractor.getArticle(simpleFieldToFieldProcessor, pathStr, title, smiles, wikitext);
         }
     }
-
-    public Map<String, Integer> getInfoboxKeysStatistics() {
-        return documentFromWikitextExtractor.getInfoboxKeysStatistics();
-    }
-
 }
-
-

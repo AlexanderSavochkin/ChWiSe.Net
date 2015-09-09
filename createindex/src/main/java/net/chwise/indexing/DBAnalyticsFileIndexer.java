@@ -18,11 +18,30 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.chwise.dataextraction;
+/*
+This file processor put compound articles to Lucene index along with storeing information
+in Postgres database table for future analysis
+*/
 
-import java.util.Map;
+package net.chwise.indexing;
+
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexWriter;
 
-public interface InfoboxDataProcessor {
-    void process( Map<String, String> infoboxContent, Document doc);
+import java.sql.Connection;
+
+public class DBAnalyticsFileIndexer extends FileProcessor {
+
+    Connection connention;
+
+    public DBAnalyticsFileIndexer(IndexWriter indexWriter) {
+        super(indexWriter);
+    }
+
+    @Override
+    void processDocument(WikiArticle wikiArticle) throws Exception {
+
+    }
+
+
 }
