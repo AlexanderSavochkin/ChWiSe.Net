@@ -2,7 +2,6 @@ package net.chwise.indexing;
 
 import net.chwise.common.document.DocDefinitions;
 import net.chwise.dataextraction.SimpleFieldToFieldProcessor;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -20,8 +19,9 @@ import org.sweble.wikitext.parser.parser.LinkTargetException;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
-import static net.chwise.test.TestData.*;
+import static net.chwise.test.TestData.MAJDINE_ARTICLE;
+import static net.chwise.test.TestData.NELDAZOSIN_ARTICLE;
+import static org.junit.Assert.assertTrue;
 
 public class DocumentFromWikitextExtractorTest {
     public void testCompoundIndexAndSearch(String t/*whatever non-empty string*/,
@@ -34,14 +34,14 @@ public class DocumentFromWikitextExtractorTest {
 
         DocumentFromWikitextExtractor documentFromWikitextExtractor = new DocumentFromWikitextExtractor();
         SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
-        Document doc = documentFromWikitextExtractor.getLuceneDocument(simpleFieldToFieldProcessor, t, compoundName, smiles, artikleWikiText);
+        WikiArticle wikiArticle = documentFromWikitextExtractor.getArticle(simpleFieldToFieldProcessor, t, compoundName, smiles, artikleWikiText);
 
         try {
             directory = new RAMDirectory();
             //directory = new SimpleFSDirectory( new File("D:\\work\\ttt\\") );  //For index structure debugging
             IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, DocDefinitions.getAnalyzer() );
             indexWriter = new IndexWriter( directory, config);
-            indexWriter.addDocument(doc);
+            indexWriter.addDocument(wikiArticle.getLuceneDocument());
         } catch (IOException e) {
             throw new RuntimeException( "Exception during creating index.", e );
         } finally {
