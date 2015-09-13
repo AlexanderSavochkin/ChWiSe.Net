@@ -38,7 +38,7 @@ import java.util.Map;
 
 public abstract class FileProcessor extends SimpleFileVisitor<Path> {
     IndexWriter indexWriter;
-    DocumentFromWikitextExtractor documentFromWikitextExtractor;PrintWriter allCompoundNamesWriter = null;
+    DocumentFromWikitextExtractor documentFromWikitextExtractor;
 
     public FileProcessor(IndexWriter indexWriter) {
         this.indexWriter = indexWriter;
@@ -46,8 +46,7 @@ public abstract class FileProcessor extends SimpleFileVisitor<Path> {
     }
 
     public void close() {
-        if (allCompoundNamesWriter != null)
-            allCompoundNamesWriter.close();
+
     }
 
     @Override
@@ -67,6 +66,8 @@ public abstract class FileProcessor extends SimpleFileVisitor<Path> {
 
     abstract void processDocument(WikiArticle wikiArticle) throws Exception;
 
+    abstract void finishProcessing() throws Exception;
+
     @Override
     public FileVisitResult preVisitDirectory(
             Path aDir, BasicFileAttributes aAttrs
@@ -77,12 +78,10 @@ public abstract class FileProcessor extends SimpleFileVisitor<Path> {
     WikiArticle readFile( Path path ) throws IOException, LinkTargetException, EngineException {
         SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
         String pathStr = path.toString();
+        String pageId = path.getFileSystem().toString();
         try (BufferedReader br = new BufferedReader(new FileReader( pathStr )))  {
             //First line is compound name
             String title = br.readLine();
-
-            if (allCompoundNamesWriter != null)
-                allCompoundNamesWriter.println(title);
 
             //Second line is smiles
             String smiles = br.readLine();
@@ -96,7 +95,7 @@ public abstract class FileProcessor extends SimpleFileVisitor<Path> {
                 line = br.readLine();
             }
             String wikitext = sb.toString();
-            return documentFromWikitextExtractor.getArticle(simpleFieldToFieldProcessor, pathStr, title, smiles, wikitext);
+            return documentFromWikitextExtractor.getArticle(simpleFieldToFieldProcessor, pathStr, pageId, title, smiles, wikitext);
         }
     }
 }

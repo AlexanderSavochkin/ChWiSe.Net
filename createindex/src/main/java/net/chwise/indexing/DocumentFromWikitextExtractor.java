@@ -46,7 +46,12 @@ public class DocumentFromWikitextExtractor {
 
     public DocumentFromWikitextExtractor() {}
 
-    public WikiArticle getArticle(InfoboxDataProcessor infoboxDataProcessor, String pathStr, String title, String smiles, String wikitext) throws LinkTargetException, EngineException {
+    public WikiArticle getArticle(InfoboxDataProcessor infoboxDataProcessor,
+                                  String pathStr,
+                                  String strPageId,
+                                  String title,
+                                  String smiles,
+                                  String wikitext) throws LinkTargetException, EngineException {
         // Retrieve a page
         PageTitle pageTitle = PageTitle.make(config, pathStr);
 
@@ -63,7 +68,7 @@ public class DocumentFromWikitextExtractor {
         InfoBoxDataExtractor infoBoxDataExtractor = new InfoBoxDataExtractor();
         Map<String, String> infoboxFields = (Map<String, String>) infoBoxDataExtractor.go(cp.getPage());
 
-        WikiArticle wikiArticle = new WikiArticle(title, text, smiles, infoboxFields, infoboxDataProcessor);
+        WikiArticle wikiArticle = new WikiArticle(strPageId, title, text, smiles, infoboxFields, infoboxDataProcessor);
         return wikiArticle;
     }
 }

@@ -33,6 +33,9 @@ import org.apache.lucene.util.Version;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class App 
@@ -49,7 +52,7 @@ public class App
         }
     }
 
-    public static void main( String[] args ) throws IOException {
+    public static void main( String[] args ) throws Exception {
         if (args.length < 2 || args.length > 6) {
             printUsage();
             return;
@@ -62,52 +65,73 @@ public class App
         String infoboxStatisticsFileName = null;
         String spellerIndexPath = null;
 
-        for (int i = 2; i < args.length - 1;) {
-            if ("--printnameslist".equals(args[i])) {
-                compoundsListFileName = args[i + 1];
-                i += 2;
-                continue;
+        boolean dumpStatisiticsToFile = false;
+        Connection sqlConnection = null;
+        FileProcessor fileProcessor = null;
+
+
+        try {
+            Directory directory = new SimpleFSDirectory(new File(indexPath));
+            Analyzer analyzer = DocDefinitions.getAnalyzer();
+            IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, analyzer);
+            IndexWriter indexWriter = new IndexWriter(directory, config);
+            for (int i = 2; i < args.length - 1;) {
+                if ("--printnameslist".equals(args[i])) {
+                    compoundsListFileName = args[i + 1];
+                    i += 2;
+                    continue;
+                }
+
+                if ("--infoboxstatistics".equals(args[i])) {
+                    infoboxStatisticsFileName = args[i + 1];
+                    i += 2;
+                    continue;
+                }
+
+                if ("--speller".equals(args[i])) {
+                    spellerIndexPath = args[i + 1];
+                    i += 2;
+                    continue;
+                }
+
+                if ("--analytics".equals(args[i]) && fileProcessor == null) {
+                    if ("file".equals(args[i + 1]) ) {
+                        dumpStatisiticsToFile = true;
+                    }
+                    else if ("db".equals(args[i + 1]) ) {
+                        sqlConnection = DriverManager.getConnection("jdbc:postgresql://localhost/ruwiki", "postgres", "123");
+                        sqlConnection.setAutoCommit(false);
+                        fileProcessor = new DBAnalyticsFileIndexer(indexWriter, sqlConnection, true);
+                    }
+                }
             }
-
-            if ("--infoboxstatistics".equals(args[i])) {
-                infoboxStatisticsFileName = args[i + 1];
-                i += 2;
-                continue;
+            if (fileProcessor == null) {
+                fileProcessor = new SimpleFileIndexer(indexWriter, dumpStatisiticsToFile, infoboxStatisticsFileName, compoundsListFileName );
             }
+            System.err.println("Starting primary index creation...");
 
-            if ("--speller".equals(args[i])) {
-                spellerIndexPath = args[i + 1];
-                i += 2;
-                continue;
-            }
-        }
-
-
-        System.err.println("Starting rimary index creation...");
-        Directory directory = new SimpleFSDirectory( new File(indexPath) );
-        Analyzer analyzer = DocDefinitions.getAnalyzer();
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, analyzer);
-        IndexWriter indexWriter = new IndexWriter( directory, config);
-        SimpleFileIndexer fileIndexer = new SimpleFileIndexer( indexWriter, compoundsListFileName );
-        Files.walkFileTree(Paths.get(startFrom), fileIndexer);
-        indexWriter.close();
-        if (infoboxStatisticsFileName != null)
-            writeInfoboxesStatToFile(args[2], fileIndexer.getInfoboxKeysStatistics());
-        System.err.println("Done!");
-
-        if (spellerIndexPath != null) {
-            System.err.println("Starting spell checking index...");
-            Directory spellerDirectory = new SimpleFSDirectory(new File(spellerIndexPath));
-
-            SpellChecker spell= new SpellChecker(spellerDirectory);
-            IndexReader primaryIndexReader = DirectoryReader.open(directory);
-
-            for (String spellField: DocDefinitions.getSpellerDictionaryFields()) {
-                Dictionary dict = new LuceneDictionary(primaryIndexReader, spellField);
-                spell.indexDictionary(dict, config, true );
-            }
+            Files.walkFileTree(Paths.get(startFrom), fileProcessor);
+            indexWriter.close();
 
             System.err.println("Done!");
+
+            if (spellerIndexPath != null) {
+                System.err.println("Starting spell checking index...");
+                Directory spellerDirectory = new SimpleFSDirectory(new File(spellerIndexPath));
+
+                SpellChecker spell = new SpellChecker(spellerDirectory);
+                IndexReader primaryIndexReader = DirectoryReader.open(directory);
+
+                for (String spellField : DocDefinitions.getSpellerDictionaryFields()) {
+                    Dictionary dict = new LuceneDictionary(primaryIndexReader, spellField);
+                    spell.indexDictionary(dict, config, true);
+                }
+
+                System.err.println("Done!");
+            }
+        }
+        finally {
+            fileProcessor.finishProcessing();
         }
     }
 }

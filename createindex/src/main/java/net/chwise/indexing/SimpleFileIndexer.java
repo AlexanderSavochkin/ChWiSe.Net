@@ -32,10 +32,17 @@ public class SimpleFileIndexer extends FileProcessor {
 
     Map<String, Integer> infoboxKeysCout = new HashMap<String, Integer>();
     boolean calculateStatistics = true;
+    String infoboxStatisticsFileName = null;
+    PrintWriter allCompoundNamesWriter = null;
 
-    SimpleFileIndexer(IndexWriter indexWriter, String compoundNamesFileName) throws FileNotFoundException {
+    SimpleFileIndexer(IndexWriter indexWriter,
+                      boolean calculateStatistics,
+                      String infoboxStatisticsFileName,
+                      String compoundNamesFileName) throws FileNotFoundException {
         super(indexWriter);
         this.indexWriter = indexWriter;
+        this.infoboxStatisticsFileName = infoboxStatisticsFileName;
+        this.calculateStatistics = calculateStatistics;
         documentFromWikitextExtractor = new DocumentFromWikitextExtractor();
         allCompoundNamesWriter = new PrintWriter(compoundNamesFileName);
     }
@@ -44,6 +51,10 @@ public class SimpleFileIndexer extends FileProcessor {
     @Override
     void processDocument(WikiArticle wikiArticle) throws Exception {
         indexWriter.addDocument(wikiArticle.getLuceneDocument());
+
+        if (allCompoundNamesWriter != null)
+            allCompoundNamesWriter.println(wikiArticle.title);
+
         //Update statistics if required
         if (calculateStatistics) {
             for (String key : wikiArticle.infoboxFields.keySet()) {
@@ -53,6 +64,15 @@ public class SimpleFileIndexer extends FileProcessor {
         }
     }
 
+    @Override
+    void finishProcessing() throws Exception {
+        if (allCompoundNamesWriter != null) {
+            allCompoundNamesWriter.close();
+        }
+        if (calculateStatistics && infoboxStatisticsFileName != null) {
+
+        }
+    }
 
     public Map<String, Integer> getInfoboxKeysStatistics() {
         return infoboxKeysCout;

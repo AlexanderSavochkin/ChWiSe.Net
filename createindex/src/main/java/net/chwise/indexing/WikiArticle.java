@@ -32,6 +32,7 @@ import java.util.Map;
 
 public class WikiArticle {
 
+    String pageId;
     String title;
     String text;
     String smiles;
@@ -41,11 +42,13 @@ public class WikiArticle {
     InfoboxDataProcessor infoboxProcessor;
     ToMOLConverter toMOLConverter = new ToMOLConverter();
 
-    WikiArticle(String title,
+    WikiArticle(String pageId,
+                String title,
                 String text,
                 String smiles,
                 Map<String, String> infoboxFields,
                 InfoboxDataProcessor infoboxProcessor) {
+        this.pageId = pageId;
         this.title = title;
         this.text = text;
         this.smiles = smiles;

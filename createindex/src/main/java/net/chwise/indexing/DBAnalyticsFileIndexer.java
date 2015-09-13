@@ -25,23 +25,86 @@ in Postgres database table for future analysis
 
 package net.chwise.indexing;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class DBAnalyticsFileIndexer extends FileProcessor {
 
     Connection connention;
+    PreparedStatement insertCompoundStatement = null;
+    PreparedStatement insertInfoboxStatement = null;
+    PreparedStatement setStrippedWikiTextStatement = null;
+    boolean ownConnection;
 
-    public DBAnalyticsFileIndexer(IndexWriter indexWriter) {
+    public DBAnalyticsFileIndexer(IndexWriter indexWriter, Connection connection, boolean ownConnection) {
         super(indexWriter);
+        this.connention = connection;
+        this.ownConnection = ownConnection;
+    }
+
+    private void init() throws SQLException {
+        //Clear old id list
+        Statement initializeStatemnent = connention.createStatement();
+        initializeStatemnent.executeUpdate("TRUNCATE compoundspages");
+        initializeStatemnent.executeUpdate("TRUNCATE compoundattributes");
+
+        insertCompoundStatement = connention.prepareStatement("INSERT INTO compoundspages (pageid, has_chembox, has_smiles, smiles, indexed, exception) VALUES (?,?,?,?,?,?)");
+        insertInfoboxStatement = connention.prepareStatement("INSERT INTO compoundattributes(pageid, attribute, value) VALUES (?,?,?)");
+        setStrippedWikiTextStatement = connention.prepareStatement("UPDATE wikipages SET =? WHERE pageid=?");
+    }
+
+    private void putCompoundDataToDB(WikiArticle wikiArticle, boolean putToIndex, String exceptionReport) throws Exception {
+        setStrippedWikiTextStatement.setString(1, wikiArticle.text);
+        setStrippedWikiTextStatement.setString(2, wikiArticle.pageId);
+        setStrippedWikiTextStatement.execute();
+
+        insertCompoundStatement.setString(1, wikiArticle.pageId);
+        insertCompoundStatement.setString(2, "1"); //has_chembox
+        insertCompoundStatement.setString(3, "1"); //has_smiles
+        insertCompoundStatement.setString(4, wikiArticle.smiles); //has_smiles
+        insertCompoundStatement.setString(5, putToIndex ? "1" : null );
+        insertCompoundStatement.setString(6, exceptionReport);
+        insertCompoundStatement.execute();
+
+        for (String key : wikiArticle.infoboxFields.keySet()) {
+            insertInfoboxStatement.setString(1, wikiArticle.pageId);
+            insertInfoboxStatement.setString(2, key);
+            insertInfoboxStatement.setString(3, wikiArticle.infoboxFields.get(key));
+            insertCompoundStatement.addBatch();
+        }
+        insertInfoboxStatement.execute();
     }
 
     @Override
     void processDocument(WikiArticle wikiArticle) throws Exception {
-
+        boolean putToIndex = false;
+        String exceptionReport = null;
+        try {
+            indexWriter.addDocument(wikiArticle.getLuceneDocument());
+            putToIndex = true;
+        }
+        catch(Exception e) {
+            putToIndex = false;
+            exceptionReport = e.toString();
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            pw.println(exceptionReport);
+            e.printStackTrace(pw);
+            exceptionReport += sw.toString();
+        }
+        putCompoundDataToDB(wikiArticle, putToIndex, exceptionReport);
     }
 
-
+    @Override
+    void finishProcessing() throws Exception {
+        if (ownConnection) {
+            connention.close();
+        }
+    }
 }

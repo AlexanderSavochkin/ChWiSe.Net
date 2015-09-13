@@ -34,7 +34,7 @@ public class DocumentFromWikitextExtractorTest {
 
         DocumentFromWikitextExtractor documentFromWikitextExtractor = new DocumentFromWikitextExtractor();
         SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
-        WikiArticle wikiArticle = documentFromWikitextExtractor.getArticle(simpleFieldToFieldProcessor, t, compoundName, smiles, artikleWikiText);
+        WikiArticle wikiArticle = documentFromWikitextExtractor.getArticle(simpleFieldToFieldProcessor, t, "111", compoundName, smiles, artikleWikiText);
 
         try {
             directory = new RAMDirectory();
