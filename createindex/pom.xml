@@ -24,7 +24,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>9.4-1202-jdbc42</version>
+      <version>9.2-1003-jdbc4</version>
     </dependency>
     <dependency>
         <groupId>org.apache.lucene</groupId>
@@ -102,14 +102,26 @@
       <version>4.10</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>org.sweble.wikitext</groupId>
+          <artifactId>swc-engine</artifactId>
+          <version>2.0.0</version>
+      </dependency>
+      <dependency>
+          <groupId>org.sweble.wikitext</groupId>
+          <artifactId>swc-parser-lazy</artifactId>
+          <version>2.0.0</version>
+      </dependency>
   </dependencies>
 
   <repositories>
-     <repository> <!--This repository contains chemical development kit.-->
-        <id>ucc-repo</id>
-        <name>UCC Repository</name>
-        <url>http://ambit.uni-plovdiv.bg:8083/nexus/content/repositories/thirdparty</url>
-     </repository>
+
+    <repository> <!--This repository contains chemical development kit.-->
+      <id>ucc-repo</id>
+      <name>UCC Repository</name>
+      <url>http://ambit.uni-plovdiv.bg:8083/nexus/content/repositories/thirdparty</url>
+    </repository>
+						    
 
      <repository>
        <id>savochkin.github.mvn.repo</id>
@@ -119,22 +131,6 @@
          <enabled>true</enabled>
          <updatePolicy>always</updatePolicy>
        </snapshots>
-     </repository>
-
-     <repository>
-       <releases>
-         <enabled>true</enabled>
-         <updatePolicy>daily</updatePolicy>
-         <checksumPolicy>warn</checksumPolicy>
-       </releases>
-       <snapshots>
-         <enabled>true</enabled>
-         <updatePolicy>daily</updatePolicy>
-         <checksumPolicy>warn</checksumPolicy>
-       </snapshots>
-       <id>osr-public-repositories</id>
-       <name>OSR Public Repositories</name>
-       <url>http://mojo.informatik.uni-erlangen.de/nexus/content/repositories/public</url>
      </repository>
 
   </repositories>
