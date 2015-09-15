@@ -84,7 +84,7 @@
     </dependency>
 
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>chwise-common</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
