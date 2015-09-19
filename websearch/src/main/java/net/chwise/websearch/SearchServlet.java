@@ -134,6 +134,7 @@ public class SearchServlet extends HttpServlet {
             boolean isSpellerEnabled = getServletConfig().getInitParameter("spellerEnabled").equals("true");
             String spellerDirectorySourceClassName = getServletConfig().getInitParameter("spellerDirectorySourceClassName");
             String spellerDirectorySourceParams = getServletConfig().getInitParameter("spellerDirectorySourceParams");
+LOGGER.log(Level.INFO, "Speller enabled: {0}", isSpellerEnabled);
 
             Directory directory = directorySource.getDirectory(directorySourceClassName, directorySourceParams);
 
@@ -183,13 +184,22 @@ public class SearchServlet extends HttpServlet {
                 query.extractTerms(terms);
                 Map<String, String> fixes = new HashMap<String, String>();
 
-                terms.retainAll( Arrays.asList(DocDefinitions.getSpellerDictionaryFields()) );
+                for (Iterator<Term> it = terms.iterator(); it.hasNext();) {
+                    Term term = it.next();
+                    if (! Arrays.asList(DocDefinitions.getSpellerDictionaryFields()).contains(term.field()) ) {
+                        it.remove();
+                    }
+                }
 
                 SpellChecker spellChecker = new SpellChecker(spellerDirectory);
                 for (Term term : terms) {
+LOGGER.log(Level.INFO, "Searching fixes for term: " + term.text());
                     if (reader.totalTermFreq(term) == 0) {
                         String[] similarWords = spellChecker.suggestSimilar(term.text(), 1, 0.8f);
-                        fixes.put(term.text(), similarWords[0]);
+                        if (similarWords!=null && similarWords.length > 0) {
+                            fixes.put(term.text(), similarWords[0]);
+                        }
+LOGGER.log(Level.INFO, "Corrected: " + similarWords[0]);
                     }
                 }
 

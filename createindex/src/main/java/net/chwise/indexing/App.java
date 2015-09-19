@@ -63,7 +63,7 @@ public class App
 
         String compoundsListFileName = null;
         String infoboxStatisticsFileName = null;
-        String spellerIndexPath = null;
+        String spellerIndexPath = args[2];//null;
 
         boolean dumpStatisiticsToFile = false;
         Connection sqlConnection = null;
@@ -75,7 +75,7 @@ public class App
             Analyzer analyzer = DocDefinitions.getAnalyzer();
             IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43, analyzer);
             IndexWriter indexWriter = new IndexWriter(directory, config);
-            for (int i = 2; i < args.length - 1;) {
+            for (int i = 3; i < args.length - 1;) {
                 if ("--printnameslist".equals(args[i])) {
                     compoundsListFileName = args[i + 1];
                     i += 2;
@@ -97,13 +97,23 @@ public class App
                 if ("--analytics".equals(args[i]) && fileProcessor == null) {
                     if ("file".equals(args[i + 1]) ) {
                         dumpStatisiticsToFile = true;
+                        i += 2;
+                        continue;
                     }
                     else if ("db".equals(args[i + 1]) ) {
-                        sqlConnection = DriverManager.getConnection("jdbc:postgresql://localhost/ruwiki", "postgres", "123");
+                        sqlConnection = DriverManager.getConnection("jdbc:postgresql://10.0.2.2/chwise", "postgres", "pspGs123");
                         sqlConnection.setAutoCommit(false);
                         fileProcessor = new DBAnalyticsFileIndexer(indexWriter, sqlConnection, true);
+                        i += 2;
+                        continue;
                     }
+                    //Wrong parameters
+                    printUsage();
+                    System.exit(1);
                 }
+                //Wrong parameters
+                printUsage();
+                System.exit(1);
             }
             if (fileProcessor == null) {
                 fileProcessor = new SimpleFileIndexer(indexWriter, dumpStatisiticsToFile, infoboxStatisticsFileName, compoundsListFileName );

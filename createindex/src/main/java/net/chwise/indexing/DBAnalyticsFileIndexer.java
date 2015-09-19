@@ -42,43 +42,48 @@ public class DBAnalyticsFileIndexer extends FileProcessor {
     PreparedStatement setStrippedWikiTextStatement = null;
     boolean ownConnection;
 
-    public DBAnalyticsFileIndexer(IndexWriter indexWriter, Connection connection, boolean ownConnection) {
+    public DBAnalyticsFileIndexer(IndexWriter indexWriter, Connection connection, boolean ownConnection) throws SQLException {
         super(indexWriter);
         this.connention = connection;
         this.ownConnection = ownConnection;
+        init();
     }
 
     private void init() throws SQLException {
         //Clear old id list
         Statement initializeStatemnent = connention.createStatement();
+        System.err.print("Truncating tables...");
         initializeStatemnent.executeUpdate("TRUNCATE compoundspages");
         initializeStatemnent.executeUpdate("TRUNCATE compoundattributes");
+        System.err.println("Ok");
 
         insertCompoundStatement = connention.prepareStatement("INSERT INTO compoundspages (pageid, has_chembox, has_smiles, smiles, indexed, exception) VALUES (?,?,?,?,?,?)");
         insertInfoboxStatement = connention.prepareStatement("INSERT INTO compoundattributes(pageid, attribute, value) VALUES (?,?,?)");
-        setStrippedWikiTextStatement = connention.prepareStatement("UPDATE wikipages SET =? WHERE pageid=?");
+        setStrippedWikiTextStatement = connention.prepareStatement("UPDATE wikipages SET strippedarticle=? WHERE pageid=?");
     }
 
     private void putCompoundDataToDB(WikiArticle wikiArticle, boolean putToIndex, String exceptionReport) throws Exception {
         setStrippedWikiTextStatement.setString(1, wikiArticle.text);
-        setStrippedWikiTextStatement.setString(2, wikiArticle.pageId);
+        setStrippedWikiTextStatement.setInt(2, Integer.parseInt(wikiArticle.pageId));
         setStrippedWikiTextStatement.execute();
 
-        insertCompoundStatement.setString(1, wikiArticle.pageId);
-        insertCompoundStatement.setString(2, "1"); //has_chembox
-        insertCompoundStatement.setString(3, "1"); //has_smiles
+        insertCompoundStatement.setInt(1, Integer.parseInt(wikiArticle.pageId));
+        insertCompoundStatement.setBoolean(2, true); //has_chembox
+        insertCompoundStatement.setBoolean(3, true); //has_smiles
         insertCompoundStatement.setString(4, wikiArticle.smiles); //has_smiles
-        insertCompoundStatement.setString(5, putToIndex ? "1" : null );
+        insertCompoundStatement.setBoolean(5, putToIndex ? true : false );
         insertCompoundStatement.setString(6, exceptionReport);
         insertCompoundStatement.execute();
 
         for (String key : wikiArticle.infoboxFields.keySet()) {
-            insertInfoboxStatement.setString(1, wikiArticle.pageId);
+            insertInfoboxStatement.setInt(1, Integer.parseInt(wikiArticle.pageId));
             insertInfoboxStatement.setString(2, key);
             insertInfoboxStatement.setString(3, wikiArticle.infoboxFields.get(key));
-            insertCompoundStatement.addBatch();
+            insertInfoboxStatement.addBatch();
         }
-        insertInfoboxStatement.execute();
+        insertInfoboxStatement.executeBatch();
+        insertInfoboxStatement.clearBatch();
+        connention.commit();
     }
 
     @Override

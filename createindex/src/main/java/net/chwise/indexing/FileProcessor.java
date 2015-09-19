@@ -78,7 +78,7 @@ public abstract class FileProcessor extends SimpleFileVisitor<Path> {
     WikiArticle readFile( Path path ) throws IOException, LinkTargetException, EngineException {
         SimpleFieldToFieldProcessor simpleFieldToFieldProcessor = new SimpleFieldToFieldProcessor();
         String pathStr = path.toString();
-        String pageId = path.getFileSystem().toString();
+        String pageId = path.getFileName().toString();
         try (BufferedReader br = new BufferedReader(new FileReader( pathStr )))  {
             //First line is compound name
             String title = br.readLine();
