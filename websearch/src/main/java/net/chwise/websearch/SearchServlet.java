@@ -24,6 +24,7 @@ import net.chwise.common.document.DocDefinitions;
 import net.chwise.documents.HighlightedFragmentsRetriever;
 import net.chwise.index.ConfigurableDirectorySource;
 
+import net.chwise.spellcheck.BasicSpeller;
 import net.chwise.websearch.jsonmessages.SearchFailureJSONResponse;
 import net.chwise.websearch.jsonmessages.SpellCorrectionsJSONResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +40,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
-import org.apache.lucene.search.spell.SpellChecker;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -134,7 +134,6 @@ public class SearchServlet extends HttpServlet {
             boolean isSpellerEnabled = getServletConfig().getInitParameter("spellerEnabled").equals("true");
             String spellerDirectorySourceClassName = getServletConfig().getInitParameter("spellerDirectorySourceClassName");
             String spellerDirectorySourceParams = getServletConfig().getInitParameter("spellerDirectorySourceParams");
-LOGGER.log(Level.INFO, "Speller enabled: {0}", isSpellerEnabled);
 
             Directory directory = directorySource.getDirectory(directorySourceClassName, directorySourceParams);
 
@@ -180,28 +179,7 @@ LOGGER.log(Level.INFO, "Speller enabled: {0}", isSpellerEnabled);
             //Suggest spell corrections
             //TODO: Parse only textual part (no structure)
             if (isSpellerEnabled) {
-                Set<Term> terms = new HashSet<Term>();
-                query.extractTerms(terms);
-                Map<String, String> fixes = new HashMap<String, String>();
-
-                for (Iterator<Term> it = terms.iterator(); it.hasNext();) {
-                    Term term = it.next();
-                    if (! Arrays.asList(DocDefinitions.getSpellerDictionaryFields()).contains(term.field()) ) {
-                        it.remove();
-                    }
-                }
-
-                SpellChecker spellChecker = new SpellChecker(spellerDirectory);
-                for (Term term : terms) {
-LOGGER.log(Level.INFO, "Searching fixes for term: " + term.text());
-                    if (reader.totalTermFreq(term) == 0) {
-                        String[] similarWords = spellChecker.suggestSimilar(term.text(), 1, 0.8f);
-                        if (similarWords!=null && similarWords.length > 0) {
-                            fixes.put(term.text(), similarWords[0]);
-                        }
-LOGGER.log(Level.INFO, "Corrected: " + similarWords[0]);
-                    }
-                }
+                Map<String, String> fixes = new BasicSpeller(spellerDirectory, reader).getCorrections(query);
 
                 //Wrap fixes to JSON response
                 JSONObject spellCorrectionMessage = SpellCorrectionsJSONResponse.create(fixes);

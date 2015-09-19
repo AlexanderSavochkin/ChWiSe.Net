@@ -21,7 +21,6 @@
 package net.chwise.indexing;
 
 import net.chwise.dataextraction.SimpleFieldToFieldProcessor;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 import org.sweble.wikitext.engine.EngineException;
 import org.sweble.wikitext.parser.parser.LinkTargetException;
@@ -29,12 +28,10 @@ import org.sweble.wikitext.parser.parser.LinkTargetException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Map;
 
 public abstract class FileProcessor extends SimpleFileVisitor<Path> {
     IndexWriter indexWriter;
