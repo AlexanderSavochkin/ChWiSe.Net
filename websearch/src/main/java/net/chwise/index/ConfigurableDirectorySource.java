@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2013 Alexander Savochkin
+ Copyright (c) 2013,2015 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
 
  This file is part of ChWiSe.Net infrastructure.
@@ -22,21 +22,11 @@ package net.chwise.index;
 
 import org.apache.lucene.store.Directory;
 
-/**
- * Created with IntelliJ IDEA.
- * User: savochkin
- * Date: 9/9/13
- * Time: 3:26 PM
- * To change this template use File | Settings | File Templates.
- */
 public class ConfigurableDirectorySource {
-    private IDirectoryInitializer directoryInitializer = null;
 
     public Directory getDirectory(String className, String params) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        if (directoryInitializer == null) {
-            directoryInitializer = (IDirectoryInitializer)Class.forName(className).newInstance();
-            directoryInitializer.setParameters(params);
-        }
+        IDirectoryInitializer directoryInitializer = (IDirectoryInitializer)Class.forName(className).newInstance();
+        directoryInitializer.setParameters(params);
         return directoryInitializer.getDirectory();
     }
 }
