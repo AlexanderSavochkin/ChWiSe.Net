@@ -179,7 +179,7 @@ public class SearchServlet extends HttpServlet {
             //Suggest spell corrections
             //TODO: Parse only textual part (no structure)
             if (isSpellerEnabled) {
-                Map<String, String> fixes = new BasicSpeller(spellerDirectory, reader).getCorrections(query);
+                Map<String, String[]> fixes = new BasicSpeller(spellerDirectory, reader).getCorrections(query);
 
                 //Wrap fixes to JSON response
                 JSONObject spellCorrectionMessage = SpellCorrectionsJSONResponse.create(fixes);

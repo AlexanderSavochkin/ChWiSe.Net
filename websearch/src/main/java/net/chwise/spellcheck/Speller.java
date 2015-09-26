@@ -26,5 +26,5 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface Speller {
-    Map<String, String> getCorrections(Query query) throws IOException;
+    Map<String, String[]> getCorrections(Query query) throws IOException;
 }

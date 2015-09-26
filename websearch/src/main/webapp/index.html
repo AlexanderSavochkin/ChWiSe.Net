@@ -84,7 +84,18 @@
             <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             <strong>Ups</strong> <%=serverMessage.message%>
           </div>
-       <% } %>
+       <% } else if (serverMessage.hasOwnProperty('spellcorrections') ) {
+              for (var s in serverMessage.spellcorrections) { 
+		if (serverMessage.spellcorrections.hasOwnProperty(s) ) { %>
+          <div class="alert alert-info alert-dismissible" role="alert">
+                   <strong><%=s%></strong> &#61;&gt; 
+		   <% for (var i = 0; i < serverMessage.spellcorrections[s].length; ++i ) { %>
+	             <%=serverMessage.spellcorrections[s][i]  %>&nbsp;
+		   <% } %>
+          </div>
+	    <%  }
+             }
+          } %>
     </script>
   </head>
   <body>

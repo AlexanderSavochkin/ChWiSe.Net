@@ -20,6 +20,7 @@
 
 package net.chwise.websearch.jsonmessages;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,12 +30,16 @@ public class SpellCorrectionsJSONResponse {
 
     private final static String SPELLCORRECTIONS_JSON_FIELD = "spellcorrections";
 
-    public static JSONObject create (Map<String,String> corrections) {
+    public static JSONObject create (Map<String,String[]> corrections) {
         JSONObject jsonResponse = new JSONObject();
         try {
             JSONObject jsonCorrections = new JSONObject();
-            for (Map.Entry<String, String> entry : corrections.entrySet()) {
-                jsonCorrections.put(entry.getKey(), entry.getValue());
+            for (Map.Entry<String, String[]> entry : corrections.entrySet()) {
+                JSONArray jsonCorrectionsArray = new JSONArray();
+                for (String correction : entry.getValue()) {
+                    jsonCorrectionsArray.put(correction);
+                }
+                jsonCorrections.put(entry.getKey(), jsonCorrectionsArray);
             }
             jsonResponse.put(SPELLCORRECTIONS_JSON_FIELD, jsonCorrections );
         } catch (JSONException e) {

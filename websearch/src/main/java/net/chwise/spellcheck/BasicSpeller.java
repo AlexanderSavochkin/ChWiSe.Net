@@ -45,10 +45,10 @@ public class BasicSpeller implements Speller {
     }
 
     @Override
-    public Map<String, String> getCorrections(Query query) throws IOException {
+    public Map<String, String[]> getCorrections(Query query) throws IOException {
         Set<Term> terms = new HashSet<Term>();
         query.extractTerms(terms);
-        Map<String, String> fixes = new HashMap<String, String>();
+        Map<String, String[]> fixes = new HashMap<String, String[]>();
 
         for (Iterator<Term> it = terms.iterator(); it.hasNext();) {
             Term term = it.next();
@@ -60,11 +60,11 @@ public class BasicSpeller implements Speller {
         for (Term term : terms) {
             LOGGER.log(Level.INFO, "Searching fixes for term: " + term.text());
             if (reader.totalTermFreq(term) == 0) {
-                String[] similarWords = spellChecker.suggestSimilar(term.text(), 1, 0.8f);
+                String[] similarWords = spellChecker.suggestSimilar(term.text(), 3, 0.8f);
                 if (similarWords!=null && similarWords.length > 0) {
-                    fixes.put(term.text(), similarWords[0]);
+                    fixes.put(term.text(), similarWords);
+                    LOGGER.log(Level.INFO, "Corrected: " + similarWords[0]);
                 }
-                LOGGER.log(Level.INFO, "Corrected: " + similarWords[0]);
             }
         }
         return fixes;
