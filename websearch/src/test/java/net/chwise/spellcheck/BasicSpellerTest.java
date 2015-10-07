@@ -107,7 +107,7 @@ public class BasicSpellerTest {
         //Test speller index
         Query q = new QueryParser(Version.LUCENE_43, TITLE_FIELD, analyzer).parse(MISSPELED_QUERY);
         Speller speller = new BasicSpeller(spellerDirectory, indexReader);
-        Map<String,String[]> spellerResults = speller.getCorrections(q);
+        Map<String,Correction[]> spellerResults = speller.getCorrections(MISSPELED_QUERY, q);
 
         //One correction expected
         assert(spellerResults.size() == 1);
@@ -115,7 +115,8 @@ public class BasicSpellerTest {
         //It should be ethanol
         assert (spellerResults.containsKey(MISSPELED_QUERY));
 
-        String[] correctedWord = spellerResults.get(MISSPELED_QUERY);
-        assert (correctedWord[0].equals("ethanol"));
+        Correction[] corrections = spellerResults.get(MISSPELED_QUERY);
+        assert (corrections[0].fixedTerm.equals("ethanol"));
+        assert (corrections[0].fixedQuery.equals("ethanol"));
     }
 }

@@ -20,6 +20,7 @@
 
 package net.chwise.websearch.jsonmessages;
 
+import net.chwise.spellcheck.Correction;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,15 +30,20 @@ import java.util.Map;
 public class SpellCorrectionsJSONResponse {
 
     private final static String SPELLCORRECTIONS_JSON_FIELD = "spellcorrections";
+    public static final String SPELLCORRECTION_JSON_TERM_FIELD = "term";
+    public static final String SPELLCORRECTION_JSON_QUERY_FIELD = "query";
 
-    public static JSONObject create (Map<String,String[]> corrections) {
+    public static JSONObject create (Map<String, Correction[]>  corrections) {
         JSONObject jsonResponse = new JSONObject();
         try {
             JSONObject jsonCorrections = new JSONObject();
-            for (Map.Entry<String, String[]> entry : corrections.entrySet()) {
+            for (Map.Entry<String, Correction[]> entry : corrections.entrySet()) {
                 JSONArray jsonCorrectionsArray = new JSONArray();
-                for (String correction : entry.getValue()) {
-                    jsonCorrectionsArray.put(correction);
+                for (Correction correction : entry.getValue()) {
+                    JSONObject jsonCorrection = new JSONObject();
+                    jsonCorrection.put(SPELLCORRECTION_JSON_TERM_FIELD, correction.fixedTerm);
+                    jsonCorrection.put(SPELLCORRECTION_JSON_QUERY_FIELD, correction.fixedQuery);
+                    jsonCorrectionsArray.put(jsonCorrection);
                 }
                 jsonCorrections.put(entry.getKey(), jsonCorrectionsArray);
             }

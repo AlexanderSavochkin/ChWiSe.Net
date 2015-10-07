@@ -1,3 +1,5 @@
+package net.chwise.spellcheck;
+
 /**
  Copyright (c) 2015 Alexander Savochkin
  Chemical wikipedia search (chwise.net) web-site source code
@@ -18,13 +20,17 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.chwise.spellcheck;
+/**
+ * Represents spell correction. Contains misstyped term, fixed term and fixed query.
+ */
+public class Correction {
+    public String originalTerm;
+    public String fixedTerm;
+    public String fixedQuery;
 
-import org.apache.lucene.search.Query;
-
-import java.io.IOException;
-import java.util.Map;
-
-public interface Speller {
-    Map<String, Correction[]> getCorrections(String stringQuery, Query query) throws IOException;
+    Correction(String originalTerm, String fixedTerm, String fixedQuery) {
+        this.originalTerm = originalTerm;
+        this.fixedTerm = fixedTerm;
+        this.fixedQuery = fixedQuery;
+    }
 }

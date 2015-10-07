@@ -90,7 +90,7 @@
           <div class="alert alert-info alert-dismissible" role="alert">
                    <strong><%=s%></strong> &#61;&gt; 
 		   <% for (var i = 0; i < serverMessage.spellcorrections[s].length; ++i ) { %>
-	             <%=serverMessage.spellcorrections[s][i]  %>&nbsp;
+              <a href="#search?q=<%=serverMessage.spellcorrections[s][i].query%>"><%=serverMessage.spellcorrections[s][i].term %></a>&nbsp;
 		   <% } %>
           </div>
 	    <%  }

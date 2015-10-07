@@ -25,6 +25,7 @@ import net.chwise.documents.HighlightedFragmentsRetriever;
 import net.chwise.index.ConfigurableDirectorySource;
 
 import net.chwise.spellcheck.BasicSpeller;
+import net.chwise.spellcheck.Correction;
 import net.chwise.websearch.jsonmessages.SearchFailureJSONResponse;
 import net.chwise.websearch.jsonmessages.SpellCorrectionsJSONResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -179,7 +180,7 @@ public class SearchServlet extends HttpServlet {
             //Suggest spell corrections
             //TODO: Parse only textual part (no structure)
             if (isSpellerEnabled) {
-                Map<String, String[]> fixes = new BasicSpeller(spellerDirectory, reader).getCorrections(query);
+                Map<String, Correction[]> fixes = new BasicSpeller(spellerDirectory, reader).getCorrections(queryText, query);
 
                 //Wrap fixes to JSON response
                 JSONObject spellCorrectionMessage = SpellCorrectionsJSONResponse.create(fixes);

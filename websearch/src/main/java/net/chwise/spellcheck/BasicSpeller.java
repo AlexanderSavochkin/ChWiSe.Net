@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BasicSpeller implements Speller {
 
@@ -45,10 +47,10 @@ public class BasicSpeller implements Speller {
     }
 
     @Override
-    public Map<String, String[]> getCorrections(Query query) throws IOException {
+    public Map<String, Correction[]> getCorrections(String stringQuery, Query query) throws IOException {
         Set<Term> terms = new HashSet<Term>();
         query.extractTerms(terms);
-        Map<String, String[]> fixes = new HashMap<String, String[]>();
+        Map<String, Correction[]> fixes = new HashMap<String, Correction[]>();
 
         for (Iterator<Term> it = terms.iterator(); it.hasNext();) {
             Term term = it.next();
@@ -61,8 +63,16 @@ public class BasicSpeller implements Speller {
             LOGGER.log(Level.INFO, "Searching fixes for term: " + term.text());
             if (reader.totalTermFreq(term) == 0) {
                 String[] similarWords = spellChecker.suggestSimilar(term.text(), 3, 0.8f);
+                Correction[] corrections = new Correction[similarWords.length];
+                for (int i = 0; i < corrections.length; ++i) {
+                    String pattern = "(\\s|^)" + term.text() + "(\\s|$)";
+                    Pattern compiledPattern = Pattern.compile(pattern,  Pattern.CASE_INSENSITIVE);
+                    Matcher matcher = compiledPattern.matcher(stringQuery);
+                    String correctedQuery = matcher.replaceAll(similarWords[i]);
+                    corrections[i] = new Correction(term.text(), similarWords[i], correctedQuery);
+                }
                 if (similarWords!=null && similarWords.length > 0) {
-                    fixes.put(term.text(), similarWords);
+                    fixes.put(term.text(), corrections);
                     LOGGER.log(Level.INFO, "Corrected: " + similarWords[0]);
                 }
             }
